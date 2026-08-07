@@ -20,6 +20,7 @@ export default function ContactPage() {
         <Button
           size="lg"
           className="mt-6"
+          nativeButton={false}
           render={
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}`}

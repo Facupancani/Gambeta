@@ -13,7 +13,7 @@ export default function CartPage() {
         página — elegís el talle y te lleva a la conversación con el pedido
         ya armado. El carrito con varios productos juntos está en camino.
       </p>
-      <Button render={<Link href="/catalogo">Ir al catálogo</Link>} />
+      <Button nativeButton={false} render={<Link href="/catalogo">Ir al catálogo</Link>} />
     </main>
   );
 }

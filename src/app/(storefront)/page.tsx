@@ -29,10 +29,16 @@ export default async function HomePage() {
         <div className="flex gap-3">
           <Button
             size="lg"
+            nativeButton={false}
             className="bg-brand-yellow text-brand-yellow-foreground hover:bg-brand-yellow/90"
             render={<Link href="/catalogo">Ver catálogo</Link>}
           />
-          <Button size="lg" variant="outline" render={<Link href="/nosotros">Conocenos</Link>} />
+          <Button
+            size="lg"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/nosotros">Conocenos</Link>}
+          />
         </div>
       </section>
 
