@@ -1,0 +1,76 @@
+// Prisma schema — Gambeta e-commerce
+// Docs: https://pris.ly/d/prisma-schema
+// NOTE: Prisma 7 requires an explicit driver adapter at runtime (see src/lib/prisma.ts).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum ProductStatus {
+  ACTIVE // visible y disponible en el catálogo
+  PAUSED // oculto del catálogo, no se borra
+  SOLD_OUT // visible pero marcado como agotado
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  name        String
+  description String           @db.Text
+  // Precio en pesos argentinos, sin decimales (evita problemas de serialización de Decimal).
+  price       Int
+  status      ProductStatus    @default(ACTIVE)
+  category    Category         @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  images      ProductImage[]
+  variants    ProductVariant[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([categoryId])
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  size      String // talle (ej: "42", "S", "M")
+  color     String?
+  sku       String?
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  url       String // URL final servida por Cloudinary
+  publicId  String? // public_id de Cloudinary, necesario para poder borrarla después
+  order     Int     @default(0)
+
+  @@index([productId])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}
