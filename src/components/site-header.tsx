@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CartBadge } from "@/components/cart-badge";
+import { MobileNav } from "@/components/mobile-nav";
 
 const NAV_LINKS = [
   { href: "/catalogo", label: "Catálogo" },
@@ -11,9 +12,14 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <Link href="/" className="font-heading text-xl font-bold tracking-tight">
-          Gambeta
-        </Link>
+        <div className="flex items-center gap-1">
+          <div className="sm:hidden">
+            <MobileNav />
+          </div>
+          <Link href="/" className="font-heading text-xl font-bold tracking-tight">
+            Gambeta
+          </Link>
+        </div>
         <nav className="hidden items-center gap-6 text-sm font-medium sm:flex">
           {NAV_LINKS.map((link) => (
             <Link

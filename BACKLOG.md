@@ -31,11 +31,13 @@ en "Notas / bloqueos" si algo queda a mitad de camino o depende del usuario.
 - [x] Borrar producto (con confirmación vía window.confirm)
 
 ## Día 4 — Deploy y pulido
-- [ ] Conectar repo a GitHub (remoto + primer push)
-- [ ] Deploy a Vercel + variables de entorno
-- [ ] Verificar con datos reales (TiDB + Cloudinary ya conectados)
-- [ ] QA end-to-end mobile: flujo de compra completo, carga de producto completa
-- [ ] Revisar Core Web Vitals / performance básica
+- [x] Conectar repo a GitHub (remoto + primer push) — hecho en el bloque anterior
+- [ ] **Deploy a Vercel + variables de entorno — BLOQUEADO, necesita al usuario (ver Notas/bloqueos)**
+- [x] Verificar con datos reales (TiDB + Cloudinary ya conectados) — hecho en el Día 3
+- [x] `npm run build` de producción — pasa limpio, sin errores
+- [x] QA mobile (viewport 375px): Home revisada, se encontró y arregló un gap real (nav completamente oculta en mobile sin alternativa) agregando menú hamburguesa con Sheet
+- [ ] QA end-to-end mobile del flujo de compra completo (catálogo→PDP→carrito→WhatsApp) — pendiente, retomar
+- [ ] Revisar Core Web Vitals / performance básica más a fondo
 - [ ] Pase final de identidad de marca (ajustes que pida el usuario o su colega)
 
 ## V2 (fuera de alcance por ahora)
@@ -105,3 +107,53 @@ en "Notas / bloqueos" si algo queda a mitad de camino o depende del usuario.
   Cloudinary y se revisó a fondo, pero conviene que el usuario haga una
   prueba manual real (subir 1-2 fotos a un producto) la primera vez que use
   el panel.
+
+### Día 4 — lo encontrado hasta ahora
+- **Bug real arreglado**: en mobile (viewport angosto) la navegación del
+  header quedaba completamente oculta (`hidden sm:flex`) sin ninguna
+  alternativa — el único acceso a Catálogo/Nosotros/etc. era el CTA del hero
+  o scrollear hasta el footer. Se agregó `src/components/mobile-nav.tsx`
+  (botón hamburguesa + Sheet lateral con todos los links) usando el
+  componente Sheet que ya estaba instalado desde el Día 1.
+- **Mismo tipo de limitación del entorno de testing, nueva variante**: al
+  navegar tocando un link dentro del Sheet mobile, el panel (ya
+  correctamente marcado `data-closed`/`data-ending-style` por React/Base UI)
+  se queda montado e interceptando clicks, porque su desmontaje depende de
+  que termine una transición CSS (`transitionend`) — evento que nunca
+  dispara en este navegador de pruebas sin compositing real. El fix de
+  código (cerrar el Sheet ajustando estado durante el render cuando cambia
+  `usePathname()`, sin usar `useEffect` para no chocar con la regla de lint
+  `react-hooks/set-state-in-effect`) es correcto y necesario de todos modos.
+  **Pendiente**: confirmar visualmente en un navegador real (o que el
+  usuario lo pruebe en su celular) que el menú se cierra prolijo al navegar
+  — no debería fallar, pero no se pudo verificar 100% con las herramientas
+  disponibles acá.
+- `npm run build` (build de producción) corre limpio, sin errores de
+  TypeScript ni de compilación. Rutas estáticas vs. dinámicas se generaron
+  como se esperaba (Home es estática pero se revalida on-demand vía
+  `revalidatePath("/")` en las Server Actions de productos, así que no
+  debería mostrar datos viejos).
+
+### BLOQUEO — deploy a Vercel necesita acción del usuario
+No hay forma de que yo despliegue a Vercel sin que el usuario haga al menos
+uno de estos pasos (no tengo `vercel` CLI autenticado en esta máquina, y
+autenticar-me yo mismo implicaría un login interactivo/OAuth que las reglas
+de seguridad no me permiten completar por él):
+
+1. **Opción más simple (recomendada)**: entrar a vercel.com (ya tiene cuenta
+   creada) → "Add New" → "Project" → importar el repo
+   `github.com/Facupancani/Gambeta` → antes de dar "Deploy", cargar las
+   variables de entorno (son las mismas que están en el `.env` local:
+   `DATABASE_URL`, `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`,
+   `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`,
+   `NEXT_PUBLIC_WHATSAPP_NUMBER`, y `NEXT_PUBLIC_SITE_URL` — esta última
+   hay que ponerla como la URL que Vercel asigne, ej.
+   `https://gambeta.vercel.app`, se puede ajustar después del primer deploy)
+   → Deploy.
+2. **Alternativa**: instalar Vercel CLI (`npm i -g vercel`) y correr
+   `vercel login` (abre el navegador para loguearse) — una vez logueado,
+   puedo tomar la posta y correr `vercel link` + `vercel env add` + `vercel
+   deploy` yo mismo desde acá.
+
+En cuanto el usuario haga cualquiera de las dos, avisar para retomar y
+terminar el resto del Día 4 (verificar el deploy real, QA final, pulido).
