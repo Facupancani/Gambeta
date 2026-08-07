@@ -157,3 +157,80 @@ de seguridad no me permiten completar por él):
 
 En cuanto el usuario haga cualquiera de las dos, avisar para retomar y
 terminar el resto del Día 4 (verificar el deploy real, QA final, pulido).
+
+## Pase de diseño (post-feedback del usuario, 2026-08-07) — PLAN APROBADO, listo para ejecutar
+
+El usuario dio feedback real sobre el sitio funcionando: falta personalidad,
+tipografía de heading parece "de código", sin imágenes, faltan afordancias de
+UX (agregar al carrito desde la card, volver atrás en PDP). Se investigó
+benchmark dirigido y se cerró un plan concreto. Referencia principal aprobada
+por el usuario: **myrsport.com.ar** (marca de sneakers urbana AR). Se
+inspeccionó en vivo (no solo por descripción) y se midieron valores reales:
+
+- Fondo negro puro (`#000`) — confirmado que el negro NO era el problema real
+  (la personalidad la da el peso de la imagen/contenido, no el color de
+  fondo). **No aclarar el fondo — sumar contenido visual encima.**
+- Heading font: **Bebas Neue** (confirmado en el DOM real de MYR — coincide
+  con una de las 3 opciones ya propuestas al usuario, así que queda elegida).
+- Body font: Inter — igual a la nuestra, sin cambios ahí.
+- Botones: `border-radius: 0px`, chicos, tipografía protagonista
+  (ej. "VER MÁS" — 12px, padding 10px 15px, fondo negro/texto blanco, sin
+  redondeo). Patrón: pocos botones convencionales, más texto+línea.
+- Nav de MYR (orden real): hamburguesa (menú) → logo centro → ícono
+  buscador → cuenta → ícono carrito con contador. El usuario pidió adaptar
+  esto pero con la lupa arriba a la **izquierda** específicamente (no calcar
+  posición exacta de MYR ahí).
+- Patrones adicionales de benchmark (conocimiento general, no navegado en
+  vivo por límite de contexto de la sesión — válido igual, son patrones muy
+  establecidos): **Nike.com** → tipografía enorme y segura en el hero, CTAs
+  minimalistas (texto subrayado + un solo botón rectangular protagonista),
+  mucho whitespace, la foto de producto siempre al frente. **Streetwear
+  premium (Off-White/Aime Leon Dore)** → botones cuadrados, uppercase con
+  tracking usado con moderación (no en todo), fotografía por sobre
+  ilustración. **On Running** → aunque ellos usan fondo claro (no aplica acá
+  directo), el patrón que sí aplica es "el color lo pone la foto de
+  producto, el chrome de la UI se mantiene neutro".
+
+### Tareas a ejecutar (orden sugerido)
+- [ ] Cambiar fuente de heading global de Space Grotesk → **Bebas Neue**
+  (`next/font/google`), mantener Inter para body. Revisar especialmente el
+  tratamiento "eyebrow" (`BOTINES · PELOTAS · ...`) que fue el disparador
+  original del feedback.
+- [ ] Bajar `--radius` global drásticamente (de 0.75rem actual a algo cercano
+  a 0, ej. 0.125rem–0.25rem) y revisar que los botones no queden
+  "convencionales" — más minimalistas, tipografía-forward, como el patrón de
+  MYR/streetwear.
+- [ ] Revisar paleta: reducir a un solo acento de color (verde cancha) usado
+  con moderación solo en acciones primarias clave (agregar al carrito,
+  checkout), y apoyarse mucho más en negro/blanco/gris para el resto —
+  similar a cómo MYR casi no usa color en su UI chrome.
+- [ ] Header: reemplazar el botón de texto "Carrito" por un ícono
+  (`ShoppingBag` o `ShoppingCart` de lucide-react) con badge de cantidad.
+- [ ] Header: agregar ícono de lupa (búsqueda) arriba a la izquierda —
+  reutiliza la búsqueda que YA existe en `/catalogo?q=` (Día 1), solo falta
+  la UI para revelarla (input inline o overlay chico al hacer click).
+- [ ] Placeholders de producto: ícono ilustrado por categoría (botín, pelota,
+  canillera, media) en vez del fallback de texto plano actual — da peso
+  visual mientras no hay fotos reales.
+- [ ] Botón rápido "+"/Agregar al carrito directo en las `ProductCard` (catálogo
+  y home), sin tener que entrar al PDP.
+- [ ] Flecha/link de "volver" en la página de producto (a `/catalogo` o al
+  origen si viene de ahí).
+- [ ] **Aprobado por el usuario, pendiente de ejecutar**: buscar 8-9 fotos de
+  stock gratuitas y con licencia libre (Unsplash/Pexels, botines/fútbol) y
+  cargarlas al catálogo de ejemplo vía Cloudinary — el usuario ya dio el ok
+  explícito para esto (implica descargar archivos externos, categoría que
+  normalmente requiere permiso — YA CONCEDIDO en esta conversación,
+  2026-08-07, no volver a preguntar salvo que algo cambie).
+- [ ] Páginas institucionales (Nosotros/FAQ/Contacto/Envíos): el usuario dijo
+  explícitamente **NO tocarlas** por ahora — probablemente las saquen más
+  adelante, quedan de relleno. Foco 100% en Home/Catálogo/Producto/Admin/
+  WhatsApp.
+- [ ] Verificar todo con el navegador (visual + consola) antes de dar por
+  terminado, como siempre.
+
+### Nota de método (pedido explícito del usuario, para tenerlo en cuenta en
+futuras sesiones): antes de programar cambios de diseño, definir opciones
+concretas primero (ej. 3 fuentes candidatas con el porqué) en vez de
+implementar a ciegas. Al usuario le gustó este approach y pidió que se
+mantenga como forma de trabajo para decisiones de diseño futuras.
