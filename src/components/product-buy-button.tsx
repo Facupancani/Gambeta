@@ -79,8 +79,8 @@ export function ProductBuyButton({
                 className={cn(
                   "rounded-md border border-border px-3 py-1.5 text-sm transition-colors",
                   selected?.id === variant.id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "hover:border-primary/50"
+                    ? "border-foreground bg-foreground text-background"
+                    : "hover:border-foreground/50"
                 )}
               >
                 {variant.size}
@@ -95,7 +95,7 @@ export function ProductBuyButton({
           size="lg"
           onClick={handleAddToCart}
           disabled={!selected}
-          className="bg-brand-yellow text-brand-yellow-foreground hover:bg-brand-yellow/90 sm:w-auto"
+          className="sm:w-auto"
         >
           Agregar al carrito
         </Button>

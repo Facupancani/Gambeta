@@ -51,10 +51,14 @@
 }
 
 /*
- * Gambeta brand palette — "cancha premium de noche": near-black base,
- * vivid grass green as the primary accent, warm card-yellow reserved for
- * standout CTAs (via bg-brand-yellow, not wired into shadcn's own tokens
- * so it doesn't leak into every hover/focus state).
+ * Gambeta brand palette — "cancha premium de noche": near-black base, one
+ * accent (vivid grass green, --primary) reserved for key actions only —
+ * add to cart, checkout — everything else in the UI chrome leans on
+ * black/white/gray (see BACKLOG.md "Pase de diseño", post-feedback pass:
+ * dropped the earlier second yellow accent to consolidate on this single
+ * color, closer to how myrsport.com.ar barely uses color in its chrome).
+ * --brand-yellow is kept defined but currently unreferenced, in case a
+ * future one-off badge/promo wants a second accent again.
  *
  * The site commits to one dark theme (no light/dark toggle on the
  * storefront), so :root and .dark intentionally carry the same values —
@@ -85,7 +89,10 @@
   --chart-3: oklch(0.84 0.17 95);
   --chart-4: oklch(0.5 0.02 160);
   --chart-5: oklch(0.35 0.02 160);
-  --radius: 0.75rem;
+  /* Deliberately near-zero, not the shadcn default 0.75rem — matches the
+   * approved streetwear/MYR benchmark (square-ish buttons/cards, typography
+   * does the work instead of soft corners). See BACKLOG.md "Pase de diseño". */
+  --radius: 0.125rem;
   --sidebar: oklch(0.185 0.013 160);
   --sidebar-foreground: oklch(0.97 0.004 160);
   --sidebar-primary: oklch(0.75 0.19 150);
@@ -95,7 +102,7 @@
   --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.75 0.19 150 / 55%);
 
-  /* Bespoke brand accent — used sparingly for hero CTAs, not a structural shadcn token. */
+  /* Unused for now (see note above) — kept defined, not a structural shadcn token. */
   --brand-yellow: oklch(0.84 0.17 95);
   --brand-yellow-foreground: oklch(0.2 0.03 95);
 }
@@ -109,5 +116,15 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Bebas Neue only ships weight 400 (it's a display face, already heavy by
+   * design). Force it everywhere font-heading is used so pairing it with a
+   * Tailwind font-bold/font-semibold utility (common across the codebase)
+   * never triggers the browser's synthetic-bold fallback, which looks
+   * blurry/fake on a condensed display font.
+   */
+  .font-heading {
+    font-weight: 400 !important;
+    letter-spacing: 0.01em;
   }
 }

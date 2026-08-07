@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { ProductBuyButton } from "@/components/product-buy-button";
+import { CategoryIcon } from "@/lib/category-icon";
 
 type Params = Promise<{ slug: string }>;
 
@@ -44,6 +47,13 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
+      <Link
+        href="/catalogo"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Volver al catálogo
+      </Link>
       <div className="grid gap-10 sm:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-xl bg-secondary">
           {mainImage ? (
@@ -56,8 +66,13 @@ export default async function ProductPage({ params }: { params: Params }) {
               priority
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-              {product.category.name}
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
+              <CategoryIcon
+                categorySlug={product.category.slug}
+                className="size-16"
+                strokeWidth={1.25}
+              />
+              <span className="text-sm">{product.category.name}</span>
             </div>
           )}
         </div>
@@ -69,7 +84,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           <h1 className="font-heading mt-1 text-3xl font-bold">
             {product.name}
           </h1>
-          <p className="mt-3 text-2xl font-semibold text-primary">
+          <p className="mt-3 text-2xl font-semibold text-foreground">
             {formatPrice(product.price)}
           </p>
           <p className="mt-6 text-muted-foreground">{product.description}</p>

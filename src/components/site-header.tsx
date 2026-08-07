@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CartBadge } from "@/components/cart-badge";
 import { MobileNav } from "@/components/mobile-nav";
+import { SiteSearch } from "@/components/site-search";
 
 const NAV_LINKS = [
   { href: "/catalogo", label: "Catálogo" },
@@ -16,6 +17,10 @@ export function SiteHeader() {
           <div className="sm:hidden">
             <MobileNav />
           </div>
+          {/* Search sits leftmost, ahead of the logo — adapted from the
+              myrsport.com.ar nav pattern per the user's explicit call to put
+              it on the left (not copying MYR's exact slot for it). */}
+          <SiteSearch />
           <Link href="/" className="font-heading text-xl font-bold tracking-tight">
             Gambeta
           </Link>

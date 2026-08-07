@@ -64,14 +64,14 @@ export default function CartPage() {
             <div className="flex-1">
               <Link
                 href={`/producto/${item.productSlug}`}
-                className="font-medium hover:text-primary"
+                className="font-medium hover:underline"
               >
                 {item.productName}
               </Link>
               <p className="text-sm text-muted-foreground">
                 {[item.size, item.color].filter(Boolean).join(" · ")}
               </p>
-              <p className="mt-1 font-semibold text-primary">
+              <p className="mt-1 font-semibold text-foreground">
                 {formatPrice(item.price)}
               </p>
             </div>
@@ -116,11 +116,7 @@ export default function CartPage() {
         <p className="text-lg font-semibold">
           Total: {formatPrice(totalPrice)}
         </p>
-        <Button
-          size="lg"
-          onClick={handleCheckout}
-          className="bg-brand-yellow text-brand-yellow-foreground hover:bg-brand-yellow/90"
-        >
+        <Button size="lg" onClick={handleCheckout}>
           Finalizar por WhatsApp
         </Button>
       </div>

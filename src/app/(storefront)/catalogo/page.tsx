@@ -29,6 +29,7 @@ export default async function CatalogPage({
       include: {
         category: true,
         images: { orderBy: { order: "asc" }, take: 1 },
+        variants: { orderBy: { createdAt: "asc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -42,8 +43,10 @@ export default async function CatalogPage({
         <Link
           href="/catalogo"
           className={cn(
-            "rounded-full border border-border px-4 py-1.5 text-sm",
-            !categoria && "border-primary bg-primary/10 text-primary"
+            "rounded-full border border-border px-4 py-1.5 text-sm transition-colors",
+            !categoria
+              ? "border-foreground bg-foreground text-background"
+              : "hover:border-foreground/50"
           )}
         >
           Todos
@@ -53,9 +56,10 @@ export default async function CatalogPage({
             key={category.id}
             href={`/catalogo?categoria=${category.slug}`}
             className={cn(
-              "rounded-full border border-border px-4 py-1.5 text-sm",
-              categoria === category.slug &&
-                "border-primary bg-primary/10 text-primary"
+              "rounded-full border border-border px-4 py-1.5 text-sm transition-colors",
+              categoria === category.slug
+                ? "border-foreground bg-foreground text-background"
+                : "hover:border-foreground/50"
             )}
           >
             {category.name}
@@ -78,7 +82,10 @@ export default async function CatalogPage({
                 price: product.price,
                 status: product.status,
                 categoryName: product.category.name,
+                categorySlug: product.category.slug,
                 imageUrl: product.images[0]?.url,
+                quickAddVariantId: product.variants[0]?.id,
+                quickAddVariantSize: product.variants[0]?.size,
               }}
             />
           ))}

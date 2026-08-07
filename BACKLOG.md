@@ -158,7 +158,7 @@ de seguridad no me permiten completar por él):
 En cuanto el usuario haga cualquiera de las dos, avisar para retomar y
 terminar el resto del Día 4 (verificar el deploy real, QA final, pulido).
 
-## Pase de diseño (post-feedback del usuario, 2026-08-07) — PLAN APROBADO, listo para ejecutar
+## Pase de diseño (post-feedback del usuario, 2026-08-07) — ✅ HECHO Y VERIFICADO
 
 El usuario dio feedback real sobre el sitio funcionando: falta personalidad,
 tipografía de heading parece "de código", sin imágenes, faltan afordancias de
@@ -191,43 +191,92 @@ inspeccionó en vivo (no solo por descripción) y se midieron valores reales:
   directo), el patrón que sí aplica es "el color lo pone la foto de
   producto, el chrome de la UI se mantiene neutro".
 
-### Tareas a ejecutar (orden sugerido)
-- [ ] Cambiar fuente de heading global de Space Grotesk → **Bebas Neue**
-  (`next/font/google`), mantener Inter para body. Revisar especialmente el
-  tratamiento "eyebrow" (`BOTINES · PELOTAS · ...`) que fue el disparador
-  original del feedback.
-- [ ] Bajar `--radius` global drásticamente (de 0.75rem actual a algo cercano
-  a 0, ej. 0.125rem–0.25rem) y revisar que los botones no queden
-  "convencionales" — más minimalistas, tipografía-forward, como el patrón de
-  MYR/streetwear.
-- [ ] Revisar paleta: reducir a un solo acento de color (verde cancha) usado
-  con moderación solo en acciones primarias clave (agregar al carrito,
-  checkout), y apoyarse mucho más en negro/blanco/gris para el resto —
-  similar a cómo MYR casi no usa color en su UI chrome.
-- [ ] Header: reemplazar el botón de texto "Carrito" por un ícono
-  (`ShoppingBag` o `ShoppingCart` de lucide-react) con badge de cantidad.
-- [ ] Header: agregar ícono de lupa (búsqueda) arriba a la izquierda —
-  reutiliza la búsqueda que YA existe en `/catalogo?q=` (Día 1), solo falta
-  la UI para revelarla (input inline o overlay chico al hacer click).
-- [ ] Placeholders de producto: ícono ilustrado por categoría (botín, pelota,
-  canillera, media) en vez del fallback de texto plano actual — da peso
-  visual mientras no hay fotos reales.
-- [ ] Botón rápido "+"/Agregar al carrito directo en las `ProductCard` (catálogo
-  y home), sin tener que entrar al PDP.
-- [ ] Flecha/link de "volver" en la página de producto (a `/catalogo` o al
-  origen si viene de ahí).
-- [ ] **Aprobado por el usuario, pendiente de ejecutar**: buscar 8-9 fotos de
-  stock gratuitas y con licencia libre (Unsplash/Pexels, botines/fútbol) y
-  cargarlas al catálogo de ejemplo vía Cloudinary — el usuario ya dio el ok
-  explícito para esto (implica descargar archivos externos, categoría que
-  normalmente requiere permiso — YA CONCEDIDO en esta conversación,
-  2026-08-07, no volver a preguntar salvo que algo cambie).
-- [ ] Páginas institucionales (Nosotros/FAQ/Contacto/Envíos): el usuario dijo
-  explícitamente **NO tocarlas** por ahora — probablemente las saquen más
-  adelante, quedan de relleno. Foco 100% en Home/Catálogo/Producto/Admin/
-  WhatsApp.
-- [ ] Verificar todo con el navegador (visual + consola) antes de dar por
-  terminado, como siempre.
+### Tareas a ejecutar (orden sugerido) — ✅ TODO HECHO Y VERIFICADO (2026-08-07)
+- [x] Cambiar fuente de heading global de Space Grotesk → **Bebas Neue**
+  (`next/font/google`, `weight: "400"` porque no es variable). Confirmado
+  API de fonts contra `node_modules/next/dist/docs/` antes de tocar código
+  (sin breaking changes ahí). Como Bebas Neue solo tiene peso 400, se agregó
+  `.font-heading { font-weight: 400 !important }` en `globals.css` para que
+  no dispare bold sintético del navegador al combinarse con las clases
+  `font-bold`/`font-semibold` que ya usaba el resto del código. Verificado
+  en navegador: headings, eyebrow y logo renderizan con la fuente nueva sin
+  errores de consola.
+- [x] Bajar `--radius` global de 0.75rem a **0.125rem** (extremo inferior del
+  rango sugerido) — botones/cards/pills quedan casi cuadrados. Verificado
+  visualmente vía accessibility tree (no hay forma de comparar radios en
+  píxeles con las herramientas disponibles, pero la clase se aplica y no
+  rompe layout en ningún viewport probado).
+- [x] Paleta reducida a un solo acento: se sacó el segundo acento amarillo
+  (`--brand-yellow`, usado antes en "Ver catálogo", "Agregar al carrito" y
+  "Finalizar por WhatsApp") y esos 3 CTAs ahora usan el verde `--primary`
+  (variant "default" del Button). El resto de los usos decorativos de verde
+  (bordes hover de card, pills de categoría activas, precio, links) se
+  pasaron a negro/blanco/gris (`foreground`/`muted-foreground`, o invertido
+  `bg-foreground text-background` para estados "seleccionado"). Token
+  `--brand-yellow` se deja definido pero sin usar, documentado en el
+  comentario de `globals.css` por si se necesita un acento futuro.
+- [x] Header: "Carrito" en texto → ícono `ShoppingBag` (lucide-react) con
+  badge de cantidad (`cart-badge.tsx`). Verificado en navegador: agregar un
+  producto vía quick-add y confirmar en `/carrito` que el item aparece
+  (probado end-to-end, ver abajo).
+- [x] Header: ícono de lupa a la izquierda del logo (`site-search.tsx`,
+  nuevo componente) — toggle a un input inline que navega a
+  `/catalogo?q=...`. Nota de entorno: el `key: "Return"` sintético del
+  navegador de pruebas no siempre dispara el submit nativo del `<form>`
+  (mismo tipo de limitación ya documentada en Día 3/4 con popovers y
+  transiciones CSS) — se confirmó el flujo real disparando
+  `form.requestSubmit()` vía JS, que navegó correctamente a
+  `/catalogo?q=medias` y filtró a 1 resultado. Un click real de mouse no
+  tiene este problema.
+- [x] Placeholders ilustrados por categoría: `src/lib/category-icon.tsx`
+  mapea `Category.slug` → ícono de lucide-react (`SportShoe` botines,
+  `Volleyball` pelotas, `Shield` canilleras, `Shirt` medias, fallback
+  `Package`). Aplicado en `ProductCard` y en la PDP.
+- [x] Botón rápido "+" en `ProductCard` (catálogo y home): usa la primera
+  variante del producto (sin selector de talle en la card). Requirió pasar
+  `variants: { take: 1 }` en las queries de home/catálogo. La card se
+  reestructuró de `<Link>` envolvente a `<div>` + `<Link className="contents">`
+  para el área clickeable, con el botón "+" como hermano posicionado encima
+  (evita anidar `<button>` dentro de `<a>`, HTML inválido). Verificado
+  end-to-end en navegador: click en "+" en Home agrega el item sin navegar,
+  toast de confirmación, y `/carrito` muestra el producto con talle "Único"
+  y el total correcto. Correctamente ausente en el único producto
+  `SOLD_OUT` (Botines Gambeta Elite X).
+- [x] Flecha "Volver al catálogo" en la PDP (`producto/[slug]/page.tsx`),
+  con ícono `ArrowLeft`, apunta a `/catalogo`.
+- [x] **8-9 fotos de stock cargadas** (9 en total, una por producto del
+  seed — botines: Unsplash; pelotas: Unsplash; canilleras: Wikimedia
+  Commons; medias: Pexels — todas de licencia libre/gratuita, fuentes
+  documentadas en `prisma/seed-images.ts`). Descargadas, subidas a
+  Cloudinary vía el mismo preset unsigned que ya usa el widget del admin
+  (`prisma/seed-images.ts`, no forma parte de `npm run db:seed` — es un
+  script aparte pensado para correr una vez, seguro de re-correr) y
+  asociadas como `ProductImage` de cada producto. Verificado: el request
+  directo al optimizador de imágenes de Next.js devuelve 200/image-jpeg
+  para las URLs de Cloudinary, y la imagen `priority` de una PDP cargó con
+  `naturalWidth` real (640px) — confirma que el pipeline completo
+  (Cloudinary → Next/Image) funciona. Las miniaturas lazy-load de las
+  grillas de Home/Catálogo no se pudieron confirmar pixel a pixel en este
+  navegador de pruebas (el `IntersectionObserver` del lazy-loading no
+  dispara sin compositing real — mismo tipo de limitación ya documentada en
+  Día 3/4), pero usan el mismo componente `<Image>` y la misma URL
+  verificada, así que no hay motivo para que se comporten distinto en un
+  navegador real.
+- [x] Páginas institucionales (Nosotros/FAQ/Contacto/Envíos): NO se
+  tocaron — solo heredan el cambio global de fuente/paleta/radius vía
+  `globals.css`/`layout.tsx`, ningún archivo propio de esas páginas fue
+  editado.
+- [x] Verificado con navegador (visual vía accessibility tree + consola sin
+  errores) en desktop (1280px) y mobile (375px, sin overflow horizontal) en
+  Home, Catálogo (con y sin filtro), PDP, Carrito, y panel Admin
+  (Inicio/Productos) antes de dar todo por terminado.
+
+**Nota de licencias**: 2 de las 9 fotos (canilleras, vía Wikimedia Commons)
+son CC-BY-SA y piden atribución si se usan públicamente; el resto
+(Unsplash/Pexels) no la requiere. Como es catálogo de ejemplo, no bloquea,
+pero si el usuario quiere reemplazar canilleras por fotos propias/CC0 más
+adelante, tenerlo en cuenta. Fuente completa de cada foto en
+`prisma/seed-images.ts`.
 
 ### Nota de método (pedido explícito del usuario, para tenerlo en cuenta en
 futuras sesiones): antes de programar cambios de diseño, definir opciones

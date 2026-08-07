@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter, Geist_Mono } from "next/font/google";
+import { Bebas_Neue, Inter, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-// Brand typography: Space Grotesk for headings (bold, geometric, has character),
-// Inter for body text (neutral, highly legible). Both free via next/font/google.
-const spaceGrotesk = Space_Grotesk({
+// Brand typography: Bebas Neue for headings (tall, condensed, poster-like —
+// matches the streetwear/sportswear benchmark, e.g. myrsport.com.ar), Inter
+// for body text (neutral, highly legible). Both free via next/font/google.
+// Bebas Neue isn't a variable font, so it needs an explicit weight.
+const bebasNeue = Bebas_Neue({
   variable: "--font-heading",
   subsets: ["latin"],
+  weight: "400",
 });
 
 const inter = Inter({
@@ -33,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${bebasNeue.variable} ${inter.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}
