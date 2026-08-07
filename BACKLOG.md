@@ -21,14 +21,14 @@ en "Notas / bloqueos" si algo queda a mitad de camino o depende del usuario.
 - [x] Checkout: un solo mensaje de WhatsApp con todos los items del carrito
 - [x] Indicador de cantidad de items en el header
 
-## Día 3 — Panel admin completo
-- [ ] Crear producto (formulario + Server Action + validación con zod)
-- [ ] Editar producto
-- [ ] Carga de imágenes vía Cloudinary Upload Widget (drag & drop, múltiples, reordenar)
-- [ ] Duplicar producto
-- [ ] Edición rápida inline (estado, precio) desde la tabla
-- [ ] CRUD de categorías (crear/editar/borrar)
-- [ ] Borrar producto (con confirmación)
+## Día 3 — Panel admin completo ✅ (hecho y verificado en navegador contra TiDB real)
+- [x] Crear producto (formulario + Server Action + validación con zod)
+- [x] Editar producto
+- [x] Carga de imágenes vía Cloudinary Upload Widget (drag & drop, múltiples, reordenar) — código integrado y revisado; la subida real en sí no se probó en vivo (ver nota abajo)
+- [x] Duplicar producto
+- [x] Edición rápida inline (estado, precio) desde la tabla
+- [x] CRUD de categorías (crear/editar/borrar, con protección: no deja borrar categorías con productos)
+- [x] Borrar producto (con confirmación vía window.confirm)
 
 ## Día 4 — Deploy y pulido
 - [ ] Conectar repo a GitHub (remoto + primer push)
@@ -63,4 +63,45 @@ en "Notas / bloqueos" si algo queda a mitad de camino o depende del usuario.
 - Bug encontrado y arreglado: los `<Button>` de shadcn (Base UI) que usan
   `render={<Link>...}` o `render={<a>...}` necesitan `nativeButton={false}`
   explícito, si no tiran un warning de accesibilidad en consola. Tenerlo en
-  cuenta para cualquier botón nuevo que renderice como link.
+  cuenta para cualquier botón nuevo que renderice como link. Apareció de
+  nuevo en el botón "Nuevo producto" del Día 3 — chequear siempre que se
+  agregue un botón que renderiza como link.
+
+### Bugs encontrados y arreglados en el Día 3 (verificación en navegador)
+- **`SelectValue` de Base UI muestra el `value` crudo, no la etiqueta**: sin
+  pasarle una función `children` (`(value) => label`), el trigger del Select
+  mostraba el ID de categoría o el enum de estado en vez de "Botines"/
+  "Activo". Se arregló en `product-form.tsx` y `product-quick-edit-form.tsx`
+  pasando una función de mapeo. Si se agrega un Select nuevo, tenerlo en cuenta.
+- **Funciones como children de un Client Component no pueden venir de un
+  Server Component**: `productos/page.tsx` (Server Component) intentaba pasar
+  `<SelectValue>{(value) => ...}</SelectValue>` directamente, lo cual rompe
+  la serialización RSC ("Functions are not valid as a child of Client
+  Components"). Se resolvió extrayendo esa parte a
+  `product-quick-edit-form.tsx`, un Client Component dedicado.
+- **Inputs no controlados con `defaultValue` que cambia después del mount**:
+  al renombrar una categoría o actualizar precio/estado inline, el input
+  seguía mostrando el valor viejo (o tiraba warning de Base UI: "changing
+  the default value state of an uncontrolled FieldControl") porque React
+  reusa la misma instancia del input al revalidar. Se arregló agregando
+  `key={valor}` a esos inputs/selects (en `categorias/page.tsx` y
+  `product-quick-edit-form.tsx`) para forzar remount cuando el valor cambia.
+  Mismo patrón aplicado preventivamente con `key={product.id}` en
+  `ProductForm` dentro de la página de edición, para que no arrastre datos
+  del producto anterior si se navega entre ediciones sin remount completo.
+- **Entorno de testing con navegador no compone frames** ("the Browser pane
+  is not displayed"): los popovers posicionados por floating-ui (el listado
+  desplegable de un Select) miden `getBoundingClientRect() = {0,0,0,0}`, así
+  que un click por coordenadas de mouse no le pega. Se sorteó despachando
+  eventos de puntero directo sobre el nodo del DOM, o llamando
+  `form.requestSubmit()` para probar la Server Action de punta a punta. Esto
+  es una limitación del entorno de pruebas automatizado, no del código — un
+  usuario real con mouse no tiene este problema. Tenerlo en cuenta para
+  futuras verificaciones: si un click no parece hacer nada, probar
+  `requestSubmit()`/`dispatchEvent` antes de asumir que el código está roto.
+- **Sin probar en vivo**: la subida real de imágenes vía el widget de
+  Cloudinary (es un iframe de terceros) no se pudo automatizar con las
+  herramientas de browser disponibles. El código sigue el patrón oficial de
+  Cloudinary y se revisó a fondo, pero conviene que el usuario haga una
+  prueba manual real (subir 1-2 fotos a un producto) la primera vez que use
+  el panel.
