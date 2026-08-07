@@ -36,7 +36,7 @@ en "Notas / bloqueos" si algo queda a mitad de camino o depende del usuario.
 - [x] Verificar con datos reales (TiDB + Cloudinary ya conectados) — hecho en el Día 3
 - [x] `npm run build` de producción — pasa limpio, sin errores
 - [x] QA mobile (viewport 375px): Home revisada, se encontró y arregló un gap real (nav completamente oculta en mobile sin alternativa) agregando menú hamburguesa con Sheet
-- [ ] QA end-to-end mobile del flujo de compra completo (catálogo→PDP→carrito→WhatsApp) — pendiente, retomar
+- [x] QA end-to-end mobile del flujo de compra completo: catálogo→PDP→agregar al carrito→carrito→total — todo verificado en viewport 375px, sin overflow horizontal en ninguna página, sin errores de consola
 - [ ] Revisar Core Web Vitals / performance básica más a fondo
 - [ ] Pase final de identidad de marca (ajustes que pida el usuario o su colega)
 
