@@ -76,8 +76,10 @@ export default async function ProductPage({ params }: { params: Params }) {
 
           <div className="mt-8">
             <ProductBuyButton
+              productSlug={product.slug}
               productName={product.name}
               price={product.price}
+              imageUrl={mainImage?.url}
               variants={product.variants}
               soldOut={product.status === "SOLD_OUT"}
             />

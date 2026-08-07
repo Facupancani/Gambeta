@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CartBadge } from "@/components/cart-badge";
 
 const NAV_LINKS = [
   { href: "/catalogo", label: "Catálogo" },
@@ -24,12 +25,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link
-          href="/carrito"
-          className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:border-primary/50"
-        >
-          Carrito
-        </Link>
+        <CartBadge />
       </div>
     </header>
   );

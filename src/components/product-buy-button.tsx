@@ -1,26 +1,49 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buildWhatsappCheckoutUrl } from "@/lib/whatsapp";
+import { useCart } from "@/lib/cart-context";
 import { cn } from "@/lib/utils";
 
 type Variant = { id: string; size: string; color?: string | null };
 
 export function ProductBuyButton({
+  productSlug,
   productName,
   price,
+  imageUrl,
   variants,
   soldOut,
 }: {
+  productSlug: string;
   productName: string;
   price: number;
+  imageUrl?: string | null;
   variants: Variant[];
   soldOut: boolean;
 }) {
   const [selected, setSelected] = useState<Variant | undefined>(variants[0]);
+  const { addItem } = useCart();
 
-  const handleBuy = () => {
+  const handleAddToCart = () => {
+    if (!selected) return;
+    addItem({
+      variantId: selected.id,
+      productSlug,
+      productName,
+      price,
+      size: selected.size,
+      color: selected.color,
+      imageUrl,
+    });
+    toast.success("Agregado al carrito", {
+      description: `${productName} · talle ${selected.size}`,
+    });
+  };
+
+  const handleBuyNow = () => {
     if (!selected) return;
     const url = buildWhatsappCheckoutUrl([
       {
@@ -67,14 +90,25 @@ export function ProductBuyButton({
           </div>
         </div>
       )}
-      <Button
-        size="lg"
-        onClick={handleBuy}
-        disabled={!selected}
-        className="w-full bg-brand-yellow text-brand-yellow-foreground hover:bg-brand-yellow/90 sm:w-auto"
-      >
-        Comprar por WhatsApp
-      </Button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button
+          size="lg"
+          onClick={handleAddToCart}
+          disabled={!selected}
+          className="bg-brand-yellow text-brand-yellow-foreground hover:bg-brand-yellow/90 sm:w-auto"
+        >
+          Agregar al carrito
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          onClick={handleBuyNow}
+          disabled={!selected}
+          className="sm:w-auto"
+        >
+          Comprar directo por WhatsApp
+        </Button>
+      </div>
     </div>
   );
 }

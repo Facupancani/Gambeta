@@ -14,12 +14,12 @@ en "Notas / bloqueos" si algo queda a mitad de camino o depende del usuario.
 - [x] SEO básico (robots, sitemap, metadata)
 - [x] Seed con catálogo de ejemplo
 
-## Día 2 — Carrito multi-producto
-- [ ] `CartContext` + persistencia en localStorage
-- [ ] Botón "Agregar al carrito" en PDP (además de la compra directa que ya existe)
-- [ ] Página `/carrito` real: listar items, cambiar cantidad, quitar, total
-- [ ] Checkout: un solo mensaje de WhatsApp con todos los items del carrito
-- [ ] Indicador de cantidad de items en el header
+## Día 2 — Carrito multi-producto ✅ (hecho y verificado en navegador)
+- [x] `CartContext` + persistencia en localStorage
+- [x] Botón "Agregar al carrito" en PDP (además de la compra directa que ya existe)
+- [x] Página `/carrito` real: listar items, cambiar cantidad, quitar, total
+- [x] Checkout: un solo mensaje de WhatsApp con todos los items del carrito
+- [x] Indicador de cantidad de items en el header
 
 ## Día 3 — Panel admin completo
 - [ ] Crear producto (formulario + Server Action + validación con zod)
