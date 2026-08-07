@@ -283,3 +283,29 @@ futuras sesiones): antes de programar cambios de diseño, definir opciones
 concretas primero (ej. 3 fuentes candidatas con el porqué) en vez de
 implementar a ciegas. Al usuario le gustó este approach y pidió que se
 mantenga como forma de trabajo para decisiones de diseño futuras.
+
+## Pendiente — Hero con foto (feedback del 2026-08-07, sesión 2, NO implementado)
+
+El usuario, después de ver el pase de diseño ya hecho, pidió esto anotado
+para retomar en otro momento (ahora sigue con otra cosa, no tocar todavía):
+
+- [ ] **Hero de la Home con foto de impacto**: el hero actual (`page.tsx`,
+  sección superior) es solo texto sobre fondo negro — el usuario lo quiere
+  con una foto grande que dé personalidad e impacto inicial, mencionando
+  explícitamente **Nike, Adidas y myrsport.com.ar** como referencia (mismo
+  benchmark ya usado en el pase de diseño anterior — ver sección de arriba
+  para los patrones ya investigados de esas marcas: tipografía enorme +
+  foto de producto siempre al frente en Nike, fotografía por sobre
+  ilustración en streetwear premium). Definir antes de implementar: ¿foto
+  de stock (mismo criterio de licencia libre que se usó para el catálogo)
+  o esperar a que el usuario tenga foto propia? Seguir la nota de método de
+  arriba — proponer 2-3 opciones concretas de composición/foto antes de
+  programar.
+- [ ] **Botón "Ver catálogo" del hero → fondo blanco, texto negro**: pedido
+  explícito y puntual, distinto del resto de los CTAs primarios (que usan
+  el verde `--primary` desde el pase de diseño anterior). Es una excepción
+  para este botón específico, no un cambio del acento global — probablemente
+  como variant nuevo de `Button` (ej. `variant="invert"`:
+  `bg-white text-black hover:bg-white/90`) en vez de tocar `--primary`.
+  Confirmar con navegador que contrasta bien sobre la foto del hero nueva
+  una vez que esa foto exista.
