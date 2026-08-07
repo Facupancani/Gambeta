@@ -46,8 +46,21 @@ en "Notas / bloqueos" si algo queda a mitad de camino o depende del usuario.
 - [ ] Dashboard de analítica / historial de pedidos
 
 ## Notas / bloqueos
-- DB real (TiDB) y Cloudinary: el usuario ya creó las cuentas, faltan las
-  credenciales en `.env` (las pega él mismo, no van por chat).
-- GitHub: no hay repo remoto conectado todavía ni `gh` CLI instalado en esta
-  máquina — falta que el usuario cree el repo (privado) y pase la URL.
-- Vercel: se aborda recién en el Día 4, no bloquea el trabajo de Días 2-3.
+- ✅ TiDB, Cloudinary y GitHub ya conectados y verificados (ver abajo). Vercel:
+  se aborda recién en el Día 4, no bloquea el trabajo de Días 2-3.
+- IMPORTANTE (2026-08-07): `DATABASE_URL` necesita `?sslaccept=strict` al final
+  para que el schema engine de Prisma (CLI de migraciones) conecte por TLS —
+  sin eso tira "Connections using insecure transport are prohibited". El
+  adapter de runtime (`src/lib/prisma.ts`) ya fuerza `ssl: true` por su cuenta,
+  así que esto solo afectaba a `prisma migrate`/`prisma db push`, no a la app.
+- La base de datos usada es `test` (la que TiDB Serverless provee por
+  default), no `gambeta` — no hace falta crear una nueva, ya está en uso.
+- Verificado end-to-end el 2026-08-07 contra TiDB real: migración inicial
+  aplicada, seed cargado (admin + 9 productos + 4 categorías), login de admin,
+  dashboard, listado de productos, storefront — todo probado con el navegador,
+  sin errores de consola. Primer push a GitHub hecho
+  (github.com/Facupancani/Gambeta, branch `master`).
+- Bug encontrado y arreglado: los `<Button>` de shadcn (Base UI) que usan
+  `render={<Link>...}` o `render={<a>...}` necesitan `nativeButton={false}`
+  explícito, si no tiran un warning de accesibilidad en consola. Tenerlo en
+  cuenta para cualquier botón nuevo que renderice como link.
