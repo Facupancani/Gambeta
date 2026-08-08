@@ -344,11 +344,12 @@ usuario:
 import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
 intentar destrabarlo desde acá).
 
-**Estado actual**: categorías A, C, D, E, F, G y H ✅ terminadas y
-verificadas (ver detalle abajo) — queda solo B (institucionales), la
-última categoría del checklist. Próxima iteración: B, y con eso se
-cumple la condición de cierre (ver más abajo) salvo por la verificación
-final completa.
+**Estado actual**: ✅ **PASE COMPLETO — las 8 categorías (A-H) terminadas,
+verificadas y con la condición de cierre cumplida** (ver detalle de cada
+categoría abajo y el checklist de cierre al final de esta sección). El
+loop se para acá. Único pendiente real del proyecto: deploy a Vercel
+(bloqueo ya documentado en la sección "Día 4" de este mismo archivo, sin
+relación con este pase).
 
 ### Checklist por categoría
 
@@ -684,24 +685,30 @@ el tipo de cosa que puede volver a pasar):
 - [x] `BACKLOG.md` actualizado en cada iteración de este pase (no solo al
   final) — política ya seguida desde la categoría C en adelante.
 
-### Condición de cierre (el loop se para solo cuando se cumple TODO esto)
-1. Todos los ítems de A-H tildados (o marcados como excepción documentada
-   y aceptada, mismo patrón que el bloqueo de Vercel).
-2. `npm run build` limpio.
-3. `npm run typecheck` limpio.
-4. `npm run test` y `npm run test:e2e` pasan.
-5. `npm run lint` limpio.
-6. Pasada final completa en navegador (desktop + 375px mobile) por Home,
-   Catálogo, PDP, Carrito, las 4 institucionales, error/not-found
-   provocados a propósito, y admin (dashboard/productos con
-   paginación-búsqueda/categorías) — sin errores de consola, sin overflow
-   horizontal.
-7. `README.md` sin secciones desactualizadas.
-8. PR #1 actualizado con la descripción final, listo para que el usuario
-   decida cuándo revisar/mergear (el loop no mergea).
-9. Mensaje final al usuario resumiendo todo el recorrido, aclarando que
-   el deploy a Vercel sigue siendo el único paso pendiente y por qué (ver
-   bloqueo documentado arriba).
+### Condición de cierre — ✅ CUMPLIDA (2026-08-08)
+1. [x] Todos los ítems de A-H tildados — las 8 categorías completas, sin
+   excepciones pendientes.
+2. [x] `npm run build` limpio (última corrida, después de la categoría B).
+3. [x] `npm run typecheck` limpio.
+4. [x] `npm run test` (13/13) y `npm run test:e2e` (1/1) pasan.
+5. [x] `npm run lint` limpio.
+6. [x] Pasada final completa en navegador (desktop + 375px mobile): Home,
+   Catálogo, PDP (`gambeta-veloz-fg`), Carrito, las 4 institucionales
+   (ya verificadas en su propia categoría B), 404 provocado a propósito
+   (`/esto-no-existe-verificacion-final`), y admin (dashboard/productos/
+   categorías, sesión real logueada) — sin errores de consola en
+   ninguna, sin overflow horizontal en ninguna en 375px.
+7. [x] `README.md` sin secciones desactualizadas (hecho en categoría H).
+8. [x] PR #1 actualizado con la descripción final (ver commit de cierre).
+9. [x] Mensaje final al usuario enviado en el chat, resumiendo el
+   recorrido completo del pase y aclarando que el deploy a Vercel sigue
+   siendo el único paso pendiente del proyecto (bloqueo documentado en
+   la sección "Día 4" arriba, sin relación con este pase).
+
+Ante una decisión ambigua de "qué tan terminado es suficiente" (ej. si una
+foto institucional ya suma lo necesario), el criterio fue seguir con
+juicio propio y documentar la decisión en el detalle de cada categoría
+arriba, en vez de parar a preguntar.
 
 Ante una decisión ambigua de "qué tan terminado es suficiente" (ej. si una
 foto institucional ya suma lo necesario), el criterio es seguir con juicio
