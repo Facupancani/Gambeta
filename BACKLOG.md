@@ -344,11 +344,11 @@ usuario:
 import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
 intentar destrabarlo desde acá).
 
-**Estado actual**: categorías C, D, E y F ✅ terminadas y verificadas (ver
-detalle abajo) — próxima iteración: categoría G (tests con Vitest +
-Playwright), el bloque de trabajo más grande y distinto en tipo que
-queda, seguido de A/B (hero + institucionales, decisiones de diseño) y
-H (housekeeping, al final).
+**Estado actual**: categorías C, D, E, F y G ✅ terminadas y verificadas
+(ver detalle abajo) — próxima iteración: categoría H (housekeeping,
+rápida) como último trabajo "técnico" antes de meterse en las dos
+categorías que quedan y que sí son decisiones de diseño (A: hero: B:
+institucionales), guardadas para el final a propósito.
 
 ### Checklist por categoría
 
@@ -545,17 +545,74 @@ sistemático.
 - [x] `Botines Gambeta Elite X` sigue `SOLD_OUT` (badge "Agotado"
   confirmado en el catálogo).
 
-**G. Tests**
-- [ ] Vitest configurado (`vitest.config.mts`, `__tests__/` en la raíz,
-  siguiendo la guía oficial de Next 16 en
-  `node_modules/next/dist/docs/01-app/02-guides/testing/vitest.md`) con
-  tests de `formatPrice` (`src/lib/format.ts`), `slugify`
-  (`src/lib/slugify.ts`) y lógica del carrito (`src/lib/cart-context.tsx`).
-- [ ] Playwright (`@playwright/test`, no el wrapper experimental
-  `next experimental-test`) con 1-2 specs e2e del flujo crítico: catálogo
-  → PDP → carrito → link de checkout de WhatsApp generado bien.
-- [ ] Scripts nuevos en `package.json`: `test`, `test:e2e`, `typecheck`.
-- [ ] Los 4 comandos (`lint`, `typecheck`, `test`, `test:e2e`) pasan limpios.
+**G. Tests** ✅ HECHO Y VERIFICADO
+- [x] Vitest configurado (`vitest.config.mts`, `vitest.setup.ts`,
+  `__tests__/` en la raíz), siguiendo la guía oficial de Next 16
+  (`node_modules/next/dist/docs/01-app/02-guides/testing/vitest.md`).
+  13 tests en 3 archivos:
+  - `format.test.ts` (`formatPrice`): número redondo, cero, números
+    grandes con miles, redondeo de decimales. Nota real: `Intl` en
+    `es-AR` pone un espacio **no separable** (`\u00A0`, no un espacio
+    normal) entre "$" y el número — confirmado inspeccionando el output
+    real carácter por carácter antes de escribir las aserciones, no
+    adivinado (si se hubiera usado un espacio normal el test habría
+    fallado en silencio... no, habría fallado ruidosamente, pero por el
+    motivo equivocado).
+  - `slugify.test.ts`: acentos/ñ (contenido en español), símbolos como
+    "N°5" colapsando a un solo guión, trim de guiones al borde.
+  - `cart-context.test.tsx`: como `CartProvider` es Context + hooks y no
+    un reducer puro, se testea renderizando un componente arnés chico
+    con `@testing-library/react` — merge de cantidad al agregar la misma
+    variante dos veces, variantes distintas quedan en líneas separadas,
+    `updateQuantity` exacto, `updateQuantity(0)` saca la línea igual que
+    `removeItem`.
+- [x] Playwright (`@playwright/test` estándar, no el wrapper experimental
+  `next experimental-test` — sin flag experimental de por medio, mejor
+  documentado). `playwright.config.ts` (solo Chromium, `webServer`
+  reusa el dev server si ya está corriendo) + `e2e/purchase-flow.spec.ts`:
+  catálogo → click en producto → PDP → elegir talle → agregar al
+  carrito → toast → `/carrito` → click "Finalizar por WhatsApp" →
+  confirma que la URL generada es realmente un link de `wa.me` con el
+  producto, el talle y el total en el mensaje.
+- [x] Scripts en `package.json`: `test` (`vitest run`, no watch — así
+  `npm run test` termina y devuelve un exit code, no queda colgado),
+  `test:watch`, `test:e2e`, `typecheck` (`tsc --noEmit`).
+- [x] Los 4 comandos (`lint`, `typecheck`, `test`, `test:e2e`) + `build`
+  pasan limpios.
+
+**Bugs/quirks reales encontrados armando esto** (documentados porque son
+el tipo de cosa que puede volver a pasar):
+- **Conflicto de dependencias al instalar `@vitejs/plugin-react`**: la
+  versión más nueva (6.x) trae `@rolldown/plugin-babel`, que pide
+  `@babel/core@^8`, mientras que `shadcn` (ya en el proyecto) pide
+  `@babel/core@^7` — `npm install` fallaba con `ERESOLVE`. Se resolvió
+  pineando `@vitejs/plugin-react@5.2.0` (última versión antes de ese
+  cambio) en vez de forzar con `--legacy-peer-deps`.
+- **Vitest con el pool default ("forks") se cuelga en este entorno**:
+  los 3 archivos de test tiraban timeout ("Failed to start forks
+  worker"). La causa más probable es el espacio en la ruta del repo
+  (`C:\Trabajos\Botines E-commerce`), un disparador conocido de
+  problemas al spawnear procesos en Windows. Se cambió a `pool: "threads"`
+  en `vitest.config.mts` (usa `worker_threads` en vez de procesos hijo)
+  y desapareció.
+- **`@testing-library/react` no limpiaba el DOM entre tests**: sin
+  `test.globals: true` en la config (no se usó, para seguir el patrón de
+  imports explícitos de la guía oficial), el auto-cleanup de Testing
+  Library nunca se registra solo. Se agregó `afterEach(() => cleanup())`
+  a mano en `vitest.setup.ts` — sin esto, `cart-context.test.tsx` tiraba
+  "multiple elements found" a partir del segundo test del archivo.
+- **wa.me redirige a `api.whatsapp.com` casi instantáneo**: el primer
+  intento del test e2e seguía el popup con `waitForEvent("popup")` +
+  `waitForLoadState`, y para cuando se leía `popup.url()` ya había
+  redirigido — el test comparaba contra el host equivocado. Se
+  resolvió interceptando `window.open` directamente en la página
+  (`page.evaluate` reemplazando `window.open` antes del click) para
+  capturar la URL exacta que arma `buildWhatsappCheckoutUrl` (en
+  `src/lib/whatsapp.ts`), sin depender de que el popup navegue.
+- **Un `npm run build` se cayó una vez con un crash nativo de worker de
+  Windows** (exit code `3221226505`, sin relación con el código — pasó
+  limpio al reintentar en el momento y de nuevo acá). Si vuelve a pasar
+  en el futuro, reintentar antes de asumir que es un error real.
 
 **H. Housekeeping**
 - [ ] `README.md`: sección "Estado del proyecto" actualizada (carrito y
