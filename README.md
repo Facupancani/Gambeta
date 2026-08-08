@@ -32,14 +32,32 @@ productos sin conocimientos técnicos.
 |---|---|
 | `npm run dev` | Servidor de desarrollo |
 | `npm run build` | Build de producción |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit`, sin generar archivos |
+| `npm run test` | Tests unitarios (Vitest), una sola pasada |
+| `npm run test:watch` | Tests unitarios en modo watch |
+| `npm run test:e2e` | Tests end-to-end (Playwright) contra el dev server |
 | `npm run db:migrate` | Corre migraciones de Prisma |
 | `npm run db:seed` | Crea admin + catálogo de ejemplo |
 | `npm run db:studio` | Abre Prisma Studio para ver/editar datos a mano |
 
 ## Estado del proyecto
 
-Ver el plan y el backlog completo en `C:\Users\facup\.claude\plans\contexto-quiero-desarrollar-un-sleepy-possum.md`.
+Fuente de verdad del trabajo pendiente: `BACKLOG.md`, en este mismo repo.
 
-Hecho hasta ahora: setup del proyecto, modelo de datos, auth de admin, Home/Catálogo/Producto/institucionales, checkout de un solo producto por WhatsApp, vistas de lectura del panel admin, SEO básico (sitemap/robots/metadata).
+**Hecho**: setup del proyecto, modelo de datos, auth de admin, carrito
+multi-producto, checkout por WhatsApp (un producto o el carrito entero),
+CRUD completo del panel admin (crear/editar/duplicar/borrar productos,
+carga de imágenes vía Cloudinary, categorías, edición rápida inline,
+paginación y búsqueda), Home/Catálogo/Producto (con galería de fotos)/
+institucionales, identidad visual (tipografía Bebas Neue + Inter, paleta
+de un acento, hero e iconografía propia), SEO/OG completo (metadata,
+sitemap, robots, favicon/OG generados por código), accesibilidad básica
+(skip link, contraste medido, `aria-label`s), páginas de error/404/
+loading a medida, y una suite de tests (Vitest + Playwright) cubriendo la
+lógica core y el flujo de compra de punta a punta.
 
-Pendiente: carrito multi-producto, CRUD completo del panel admin (crear/editar productos, carga de imágenes, duplicar, edición rápida), deploy a Vercel, identidad visual definitiva (el nombre "Gambeta" y la paleta ya están aplicados, pero es la primera pasada).
+**Pendiente**: deploy a Vercel — bloqueado, necesita que el usuario haga
+login en vercel.com o autentique la CLI (ver el bloqueo documentado en
+`BACKLOG.md`, sección "Día 4"). Es la única pieza que falta para tener el
+sitio completo online.

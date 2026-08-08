@@ -344,11 +344,11 @@ usuario:
 import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
 intentar destrabarlo desde acá).
 
-**Estado actual**: categorías C, D, E, F y G ✅ terminadas y verificadas
-(ver detalle abajo) — próxima iteración: categoría H (housekeeping,
-rápida) como último trabajo "técnico" antes de meterse en las dos
-categorías que quedan y que sí son decisiones de diseño (A: hero: B:
-institucionales), guardadas para el final a propósito.
+**Estado actual**: categorías C, D, E, F, G y H ✅ terminadas y
+verificadas (ver detalle abajo) — quedan solo A (hero) y B
+(institucionales), las dos categorías de decisión de diseño, guardadas
+para el final a propósito (nota de método del usuario: proponer 2-3
+opciones antes de programar). Próxima iteración: A.
 
 ### Checklist por categoría
 
@@ -614,11 +614,20 @@ el tipo de cosa que puede volver a pasar):
   limpio al reintentar en el momento y de nuevo acá). Si vuelve a pasar
   en el futuro, reintentar antes de asumir que es un error real.
 
-**H. Housekeeping**
-- [ ] `README.md`: sección "Estado del proyecto" actualizada (carrito y
-  CRUD de admin ya NO están pendientes, están hechos) y sacar la
-  referencia a la ruta local del plan (`C:\Users\facup\...`).
-- [ ] `BACKLOG.md` actualizado en cada iteración, no solo al final.
+**H. Housekeeping** ✅ HECHO Y VERIFICADO
+- [x] `README.md`: sección "Estado del proyecto" reescrita reflejando lo
+  que realmente está hecho hoy (carrito, CRUD admin completo, galería de
+  fotos, SEO/OG, accesibilidad, tests — todo lo de este pase y de los
+  anteriores), sacada la referencia a la ruta local del plan
+  (`C:\Users\facup\...`), y apunta a `BACKLOG.md` como fuente de verdad
+  en vez de a un archivo que no existe en el repo. Tabla de scripts
+  completada con `lint`/`typecheck`/`test`/`test:watch`/`test:e2e`, que
+  no estaban. Confirmado por grep que no queda ninguna otra referencia a
+  rutas locales (`C:\Users\facup`) en el repo fuera de `BACKLOG.md`
+  mismo (que sí es un log de trabajo interno, no un doc público — tiene
+  sentido que mencione la carpeta scratch donde se bajaron las fotos).
+- [x] `BACKLOG.md` actualizado en cada iteración de este pase (no solo al
+  final) — política ya seguida desde la categoría C en adelante.
 
 ### Condición de cierre (el loop se para solo cuando se cumple TODO esto)
 1. Todos los ítems de A-H tildados (o marcados como excepción documentada
