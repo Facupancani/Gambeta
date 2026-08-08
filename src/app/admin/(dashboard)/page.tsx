@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import {
@@ -7,6 +8,14 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
+
+// `robots: { index: false }` on every /admin/* page — belt-and-suspenders
+// alongside robots.ts's `disallow: "/admin"`, in case a crawler ever
+// reaches one of these URLs some other way (a stray external link, etc.).
+export const metadata: Metadata = {
+  title: "Panel de administración",
+  robots: { index: false, follow: false },
+};
 
 const RECENT_LIMIT = 6;
 

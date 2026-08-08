@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { duplicateProduct, deleteProduct, quickUpdateProduct } from "@/lib/actions/products";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+export const metadata: Metadata = {
+  title: "Productos",
+  robots: { index: false, follow: false },
+};
 
 const PAGE_SIZE = 10;
 

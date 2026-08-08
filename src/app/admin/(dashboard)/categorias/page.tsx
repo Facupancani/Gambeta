@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import {
   createCategory,
   renameCategory,
   deleteCategory,
 } from "@/lib/actions/categories";
+
+export const metadata: Metadata = {
+  title: "Categorías",
+  robots: { index: false, follow: false },
+};
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";

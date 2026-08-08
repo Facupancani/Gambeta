@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import {
   updateProduct,
@@ -11,6 +12,22 @@ import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
 
 type Params = Promise<{ id: string }>;
 type SearchParams = Promise<{ created?: string; saved?: string; duplicated?: string }>;
+
+// Dynamic per-product title (e.g. "Editar Botines Gambeta Veloz FG —
+// Gambeta") instead of a static "Editar producto" — useful in practice
+// when several edit tabs are open at once.
+export async function generateMetadata({
+  params,
+}: {
+  params: Params;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const product = await prisma.product.findUnique({ where: { id }, select: { name: true } });
+  return {
+    title: product ? `Editar ${product.name}` : "Editar producto",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function EditProductPage({
   params,
