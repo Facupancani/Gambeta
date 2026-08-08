@@ -51,6 +51,7 @@ export function SiteSearch() {
         ref={inputRef}
         type="search"
         name="q"
+        aria-label="Buscar productos"
         placeholder="Buscar botines..."
         onBlur={() => setOpen(false)}
         className="h-9 w-32 rounded-md border border-border bg-transparent px-2 text-sm outline-none focus:border-foreground/50 sm:w-48"

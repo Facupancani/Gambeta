@@ -23,7 +23,10 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
+    <main
+      id="main-content"
+      className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center"
+    >
       <TriangleAlert className="size-10 text-muted-foreground" />
       <h1 className="font-heading text-3xl font-bold">Algo salió mal</h1>
       <p className="text-muted-foreground">

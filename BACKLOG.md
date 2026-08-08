@@ -344,11 +344,11 @@ usuario:
 import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
 intentar destrabarlo desde acá).
 
-**Estado actual**: categoría C (hygiene técnica) ✅ terminada y verificada
-(ver detalle abajo) — próxima iteración: categoría D (accesibilidad
-básica), sigue siendo terreno barato/poco ambiguo antes de entrar en
-categorías con decisiones de diseño (A, hero) o alcance más grande (G,
-tests).
+**Estado actual**: categorías C y D ✅ terminadas y verificadas (ver
+detalle abajo) — próxima iteración: categoría F (ampliar seed data)
+primero, porque el ítem de paginación de la categoría E no se puede
+probar en serio con solo 9 productos; después sí, E (pulido del panel
+admin) con datos reales para validar paginación/búsqueda.
 
 ### Checklist por categoría
 
@@ -422,14 +422,39 @@ tests).
   globe.svg, next.svg, vercel.svg, window.svg) — confirmado por grep que
   nada los referenciaba antes de borrarlos.
 
-**D. Accesibilidad básica**
-- [ ] Input de `site-search.tsx` (una vez expandido) con label
-  visible o `aria-label`/`aria-labelledby`.
-- [ ] Link "saltar al contenido" en el layout raíz, apuntando a `<main>`.
-- [ ] Chequeo manual de contraste de `--muted-foreground` sobre el fondo
-  oscuro para texto chico (WCAG AA, 4.5:1) — ajustar el token si no pasa,
-  documentar el resultado igual si pasa.
-- [ ] Pasada de tab-order/foco visible en storefront y admin.
+**D. Accesibilidad básica** ✅ HECHO Y VERIFICADO
+- [x] Input de `site-search.tsx` (una vez expandido) con
+  `aria-label="Buscar productos"`.
+- [x] Link "saltar al contenido" (`src/app/layout.tsx`, primer hijo de
+  `<body>`, `sr-only focus:not-sr-only`) apuntando a `#main-content`. Ese
+  id vive en el wrapper de `(storefront)/layout.tsx` (cubre todas las
+  páginas de storefront + sus error/not-found/loading) y en
+  `admin/(dashboard)/layout.tsx` (cubre dashboard/productos/categorías) —
+  más 4 páginas standalone que no comparten esos layouts y necesitaban su
+  propio id: `app/error.tsx`, `app/not-found.tsx`, `app/admin/error.tsx`,
+  `app/admin/login/page.tsx`.
+- [x] Contraste medido (no adivinado) con canvas probe + fórmula WCAG real
+  (relative luminance) sobre los colores reales de `globals.css`:
+  `--muted-foreground` sobre `--background` → **6.27:1**; sobre `--card`
+  → **5.78:1**; `--primary` sobre `--background` → **9.37:1**;
+  `--primary-foreground` sobre `--primary` → **9.34:1**. Los 4 pasan AA
+  (4.5:1) cómodos, ninguno necesitó ajuste.
+- [x] Tab-order revisado: el skip link es el primer elemento focuseable
+  del DOM (confirmado por orden real de `querySelectorAll`), seguido por
+  header (búsqueda/logo/nav/carrito) y después el contenido. **Nota de
+  entorno** (mismo tipo de limitación ya documentada en Día 3/4): este
+  navegador de pruebas reporta `document.hasFocus() === false` incluso
+  con la pestaña "fronteada" (sin compositing real), así que
+  `element.matches(':focus')` nunca da `true` acá aunque
+  `document.activeElement` sí sea el correcto — no se pudo confirmar
+  visualmente el estilo `:focus` del skip link interactuando de verdad.
+  Se verificó en su lugar a nivel de CSS compilado (recorriendo
+  `document.styleSheets` con `@layer` incluido) que las reglas
+  `.focus\:not-sr-only:focus`, `.focus\:fixed:focus`,
+  `.focus\:bg-foreground:focus`, etc. existen con las propiedades
+  correctas — el código es correcto, es la interacción en vivo la que no
+  se pudo probar acá. Un usuario real tabulando no debería tener este
+  problema.
 
 **E. Pulido del panel admin**
 - [ ] Dashboard: actividad reciente (últimos N productos creados/editados)

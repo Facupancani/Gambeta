@@ -64,6 +64,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${bebasNeue.variable} ${inter.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Skip link: invisible until focused (first Tab press), lets
+            keyboard/screen-reader users jump past the header nav straight
+            to the page content (id="main-content", set on the storefront/
+            admin content wrappers and on each standalone fallback page). */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-foreground focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-background"
+        >
+          Saltar al contenido
+        </a>
         {children}
         <Toaster />
       </body>
