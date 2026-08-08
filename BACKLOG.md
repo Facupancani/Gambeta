@@ -716,3 +716,144 @@ propio y documentar la decisión acá (mismo tono que "Notas / bloqueos"),
 no parar a preguntar — los check-ins son por hito, no por micro-decisión.
 Preguntar solo ante bloqueos reales (credenciales, decisiones de negocio
 ambiguas), no ante juicio estético dentro de la latitud ya autorizada.
+
+## Pase de contenido y pulido — sesión 4 (2026-08-08)
+
+El usuario dio feedback puntual sobre el sitio ya "portfolio-ready" (pase
+anterior) y después pidió seguir solo, con criterio propio, hasta dejar el
+sitio en el mejor estado posible para portfolio — mismo espíritu que el
+pase anterior pero sin loop formal (`/loop`): el usuario se iba a dormir y
+pidió continuar en la misma sesión, documentando cada hito acá.
+
+**Reglas de este pase** (dadas explícitamente por el usuario):
+- No tocar la sección "V2" de este archivo (Mercado Pago, cuentas, reviews,
+  etc.) ni intentar destrabar el deploy a Vercel — sigue bloqueado
+  esperando al usuario (ver "Día 4" arriba).
+- Nada de testimonios/reviews de clientes inventados como si fueran
+  reales — es contenido de portfolio, no puede parecer un engaño.
+- Commit + push al branch actual en cada hito real, sin abrir rama nueva.
+- Parar cuando ya no haya nada razonable para mejorar (un "10 real", no
+  "podría seguir para siempre"), con resumen final claro.
+
+### Bloque 1 — feedback directo del usuario ✅ HECHO Y VERIFICADO
+
+- [x] **Nav: botón "Inicio" + estado activo en negrita/blanco.**
+  `site-header.tsx` pasó a Client Component (`usePathname`) — antes era
+  Server Component y no podía saber en qué ruta estaba parado. Se agregó
+  `{ href: "/", label: "Inicio" }` al principio de `NAV_LINKS` en
+  `site-header.tsx` y `mobile-nav.tsx` (listas separadas, cada una ya
+  tenía su propio subconjunto de links). Helper `isNavLinkActive`
+  duplicado en ambos archivos (no vale la pena un módulo compartido para
+  4 líneas): `/` matchea solo exacto, el resto matchea también
+  sub-rutas (`startsWith(href + "/")`) para que, por ejemplo, la PDP deje
+  "Catálogo" marcado. Activo = `font-bold text-white` (literal `text-white`,
+  no el token `--foreground`, porque el pedido fue puntualmente "letra
+  blanca" — en este tema, que es 100% oscuro siempre, da el mismo
+  resultado visual que el token, pero es más explícito). Verificado en
+  navegador (desktop y el Sheet mobile): `getComputedStyle` real confirma
+  `rgb(255,255,255)` + `font-weight: 700` en el link activo,
+  `aria-current="page"` presente, y el resto en gris/500 — en ambas
+  variantes de nav.
+- [x] **Buscador: mostrar y permitir editar el término buscado.**
+  Antes, buscar "pelota" desde la lupa del header te dejaba en
+  `/catalogo?q=pelota` sin ninguna confirmación en pantalla de qué se
+  había buscado. Nuevo componente `src/components/catalog-search-bar.tsx`
+  (Client Component), renderizado en `catalogo/page.tsx` solo cuando hay
+  `?q=` activo: texto "Buscando resultados para" + input editable
+  (precargado con el término) + botón "Buscar" + botón "Quitar búsqueda".
+  Preserva el filtro de categoría activo al editar. El estado "sin
+  resultados" también se actualizó para citar el término buscado
+  (`No encontramos productos para "x"`) en vez del mensaje genérico.
+  Verificado en navegador end-to-end: `?q=pelota` → banner con "pelota" en
+  el input → se edita a "medias" → click "Buscar" → navega a
+  `?q=medias` y el grid pasa de 4 pelotas a 3 medias reales. Un término
+  sin match (`zzznoexiste`) muestra el mensaje correcto citándolo.
+- [x] **Home ampliada** (era solo hero + "Recién llegados" — 2 secciones,
+  se sentía "una tapa para el catálogo"). `src/app/(storefront)/page.tsx`
+  reescrito con 8 secciones en total:
+  1. Hero (foto ya existente del pase anterior, solo cambió el copy —
+     ver ítem siguiente).
+  2. Franja de confianza (4 puntos con ícono: WhatsApp, envíos, stock
+     confirmado, forma de pago) — absorbe la parte "logística" que antes
+     sobrecargaba el copy del hero.
+  3. **"Explorá por categoría"**: grilla de las 5 categorías reales
+     (`prisma.category.findMany` con `_count` de productos activos/
+     agotados por categoría, ordenadas por `createdAt asc` para respetar
+     el orden intencional del seed — botines primero, entrenamiento
+     último — en vez de alfabético como las pills del catálogo). Cada
+     tile linkea a `/catalogo?categoria=slug`. Pendiente de pulir más
+     (ver Bloque 2, ítem 1: hoy son ícono+texto plano, van a llevar foto
+     de fondo).
+  4. "Recién llegados" (ya existía, sin cambios).
+  5. "Cómo funciona": mismos 3 pasos que ya existían en `/nosotros` pero
+     con copy propio (no calcado) + link "Conocé más sobre nosotros".
+  6. Teaser de marca: reutiliza la foto que ya vive en `/nosotros`
+     (picadito en una plaza) — decisión explícita de NO bajar una foto
+     nueva para esta sección, ya era el sujeto correcto (el mismo
+     "nosotros" institucional) y evita sumar un asset más a mantener.
+  7. Teaser de FAQ: 3 de las 4 preguntas (extraídas a `src/lib/faqs.ts`,
+     fuente compartida con `/faq` para que el copy no diverja entre las
+     dos vistas) + link "Ver todas".
+  8. CTA final: "¿Listo para tu próximo partido?" con botón a WhatsApp
+     (vía `/contacto`) y uno a catálogo.
+  Se agregó ícono de categoría para "entrenamiento" (`Dumbbell`,
+  `src/lib/category-icon.tsx`) — antes caía al fallback genérico
+  (`Package`), ahora tiene ícono propio como las otras 4.
+- [x] **Slogan del hero.** El texto viejo ("Botines y accesorios pensados
+  para quien juega por pasión, no por vitrina. Elegís en el catálogo,
+  coordinamos todo por WhatsApp.") sonaba a descripción de producto, no a
+  slogan — el propio usuario lo señaló como "forzado". Se acortó a
+  **"Menos vitrina, más cancha."**, que mantiene la idea de "pasión real
+  vs. postureo" del original pero como frase corta que combina con el
+  ritmo del H1 ("Jugás vos. / El equipo lo ponemos nosotros."). La parte
+  logística que se sacó de ahí (catálogo + WhatsApp) ya no se perdió: pasó
+  a la franja de confianza (punto 2 de la lista de arriba), donde funciona
+  mejor como tranquilidad concreta en vez de venir mezclada en el slogan.
+- [x] **Imagen de "Envíos y pagos".** La foto anterior (caja de cartón
+  simple sobre fondo blanco/estudio) se sentía genérica y sin personalidad
+  — señalado explícitamente por el usuario como "espantosa". Se
+  investigaron 3 candidatas en Unsplash antes de reemplazar (mismo método
+  ya establecido en el proyecto): una tenía "Amazon Prime" visible en una
+  bolsa de fondo (descartada, mismo tipo de problema de branding de
+  terceros ya documentado en el pase anterior para el hero); las otras 2
+  (una caja "FRAGILE" a contraluz dorado, y una entrega persona-a-persona
+  al aire libre) se mandaron como imagen al usuario para elegir — **eligió
+  la entrega persona-a-persona** (RoseBox رز باکس, Unsplash, licencia
+  libre), que además encaja mejor con el mensaje de "coordinamos todo
+  personalmente" del resto del sitio que una foto de producto sola.
+  Descargada y subida a Cloudinary vía un script puntual
+  (`upload-shipping-banner.mjs`, scratch — no forma parte del repo,
+  mismo patrón que `prisma/seed-images.ts` pero para un banner
+  institucional en vez de un producto) a
+  `gambeta/institucional/xbzrx8terdvh48fphshh`. `envios-y-pagos/page.tsx`
+  actualizado con la nueva URL y alt text. Verificado: el optimizador de
+  imágenes de Next devuelve 200/image-jpeg para la nueva URL.
+
+**Verificación de base antes de seguir** (pedida explícitamente por el
+usuario antes de continuar con el resto del pase):
+- [x] `npm run build`, `npm run typecheck`, `npm run test` (13/13),
+  `npm run test:e2e` (1/1), `npm run lint` — los 5 comandos limpios.
+- [x] Pasada en navegador real (no solo build): Home, Catálogo (con
+  búsqueda editada en vivo, y con término sin resultados),
+  `/envios-y-pagos` — desktop (1280px) y mobile (375px, incluido el Sheet
+  del nav mobile abierto de verdad, con click real vía `dispatchEvent`
+  porque el navegador de pruebas de este entorno no compone frames — ver
+  nota de entorno ya documentada varias veces en este archivo). Sin
+  errores de consola, sin overflow horizontal (`scrollWidth ===
+  clientWidth === 375`) en ninguna vista mobile probada.
+- **Nota de entorno nueva** (mismo tipo de limitación ya documentada,
+  variante distinta): el server de `npm run dev` de esta sesión tardó 3
+  intentos de `preview_start` en quedar realmente escuchando — el proceso
+  de Next arrancaba pero el puerto reportado por la herramienta no
+  coincidía con el puerto real donde terminó escuchando (`:3000`, no el
+  puerto con auto-asignación que la herramienta indicó). Se confirmó con
+  `Get-CimInstance Win32_Process` + `Get-NetTCPConnection` desde
+  PowerShell en vez de asumir que el mensaje de "servidor iniciado" era
+  preciso. `.claude/launch.json` quedó con `"autoPort": true` agregado
+  (necesario porque otra sesión de chat ya tenía el puerto 3000 tomado al
+  arrancar este pase).
+
+### Bloque 2 — mejoras propias (en curso)
+
+Trabajo autónomo pedido por el usuario, sin pausar para check-in salvo
+bloqueo real. Se va documentando acá a medida que se completa cada ítem.

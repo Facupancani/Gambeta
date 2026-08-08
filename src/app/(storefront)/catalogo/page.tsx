@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/product-card";
+import { CatalogSearchBar } from "@/components/catalog-search-bar";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -39,6 +40,8 @@ export default async function CatalogPage({
     <main className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-heading text-3xl font-bold">Catálogo</h1>
 
+      {q && <CatalogSearchBar query={q} categoria={categoria} />}
+
       <div className="mt-6 flex flex-wrap gap-2">
         <Link
           href="/catalogo"
@@ -69,7 +72,9 @@ export default async function CatalogPage({
 
       {products.length === 0 ? (
         <p className="mt-12 text-muted-foreground">
-          No encontramos productos con ese filtro.
+          {q
+            ? `No encontramos productos para "${q}".`
+            : "No encontramos productos con ese filtro."}
         </p>
       ) : (
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

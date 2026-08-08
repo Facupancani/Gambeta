@@ -3,6 +3,7 @@ import {
   Volleyball,
   Shield,
   Shirt,
+  Dumbbell,
   Package,
   type LucideProps,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const CATEGORY_ICONS: Record<string, typeof SportShoe> = {
   pelotas: Volleyball,
   canilleras: Shield,
   medias: Shirt,
+  entrenamiento: Dumbbell,
 };
 
 export function CategoryIcon({
