@@ -49,13 +49,16 @@ Fuente de verdad del trabajo pendiente: `BACKLOG.md`, en este mismo repo.
 multi-producto, checkout por WhatsApp (un producto o el carrito entero),
 CRUD completo del panel admin (crear/editar/duplicar/borrar productos,
 carga de imágenes vía Cloudinary, categorías, edición rápida inline,
-paginación y búsqueda), Home/Catálogo/Producto (con galería de fotos)/
-institucionales, identidad visual (tipografía Bebas Neue + Inter, paleta
-de un acento, hero e iconografía propia), SEO/OG completo (metadata,
-sitemap, robots, favicon/OG generados por código), accesibilidad básica
-(skip link, contraste medido, `aria-label`s), páginas de error/404/
-loading a medida, y una suite de tests (Vitest + Playwright) cubriendo la
-lógica core y el flujo de compra de punta a punta.
+paginación y búsqueda), Home (hero, franja de confianza, categorías con
+foto, destacados, cómo funciona, teaser institucional, FAQ, CTA final) /
+Catálogo (con búsqueda editable) / Producto (galería de fotos + "también
+te puede interesar") / institucionales, identidad visual (tipografía
+Bebas Neue + Inter, paleta de un acento, hero e iconografía propia),
+SEO/OG completo (metadata en las 12 rutas públicas y de admin, sitemap,
+robots, favicon/OG generados por código), accesibilidad básica (skip
+link, contraste medido, `aria-label`s), páginas de error/404/loading a
+medida, y una suite de tests (Vitest + Playwright) cubriendo la lógica
+core y el flujo de compra de punta a punta.
 
 **Pendiente**: deploy a Vercel — bloqueado, necesita que el usuario haga
 login en vercel.com o autentique la CLI (ver el bloqueo documentado en

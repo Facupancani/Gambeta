@@ -57,6 +57,8 @@ const TRUST_POINTS = [
   },
 ];
 
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+
 const STEPS = [
   {
     icon: ShoppingCart,
@@ -179,13 +181,19 @@ export default async function HomePage() {
 
       {categories.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-16">
-          <div className="flex items-baseline justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="font-heading text-2xl font-bold">Explorá por categoría</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Todo lo que necesitás para jugar, en un solo lugar.
               </p>
             </div>
+            <Link
+              href="/catalogo"
+              className="shrink-0 text-sm text-foreground underline-offset-4 hover:underline"
+            >
+              Ver catálogo completo
+            </Link>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {categories.map((category) => {
@@ -367,10 +375,25 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="flex gap-3">
+            {/* Straight to wa.me, same as /contacto — a "final CTA" that
+                says "escribir por WhatsApp" should be one click away from
+                actually doing that, not a second stop on /contacto first. */}
             <Button
               size="lg"
               nativeButton={false}
-              render={<Link href="/contacto">Escribir por WhatsApp</Link>}
+              render={
+                WHATSAPP_NUMBER ? (
+                  <a
+                    href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Escribir por WhatsApp
+                  </a>
+                ) : (
+                  <Link href="/contacto">Escribir por WhatsApp</Link>
+                )
+              }
             />
             <Button
               size="lg"

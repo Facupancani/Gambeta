@@ -902,3 +902,68 @@ bloqueo real.
   de este bloque: `npm run typecheck`, `npm run lint`, `npm run test`
   (13/13), `npm run build`, `npm run test:e2e` (1/1) — los 5 limpios. Sin
   errores de consola ni overflow horizontal en Home, PDP y Carrito.
+
+### Bloque 3 — pasada crítica de "ojo de reclutador" ✅ HECHO Y VERIFICADO
+
+Recorrida completa del sitio (público + admin) buscando específicamente lo
+que un visitante nuevo notaría como pobre, roto o a medio terminar —
+además de la auditoría de metadata ya hecha arriba (Bloque 2), encontré y
+arreglé:
+
+- [x] **Todo `/admin/*` sin metadata propia** — el hallazgo más grande de
+  esta pasada. Ninguna página de admin (login, dashboard, productos,
+  categorías, nuevo, editar) tenía su propio `title`: todas heredaban el
+  default del sitio público ("Gambeta — Botines de fútbol"), así que 6
+  pestañas de admin abiertas a la vez eran indistinguibles entre sí y de
+  la tienda. Cada `page.tsx` del dashboard (ya eran Server Components) 
+  ahora exporta su `metadata` (title + `robots: { index: false, follow:
+  false }`, belt-and-suspenders junto al `disallow: "/admin"` que ya
+  tenía `robots.ts`). "Editar producto" usa `generateMetadata` dinámico
+  con el nombre real del producto. `admin/login/page.tsx` era Client
+  Component (`useActionState`) y no podía exportar metadata directo — se
+  extrajo a `src/components/admin/login-form.tsx` (mismo patrón que
+  `cart-view.tsx`). Verificado con sesión real: cada ruta de admin tiene
+  ahora un `<title>` distinto; sin sesión, `/admin/login` sirve
+  `<meta name="robots" content="noindex, nofollow">`.
+- [x] **Home: header de "Explorá por categoría" con un `justify-between`
+  sin nada del lado derecho** — quedó así del Bloque 1 (era el mismo
+  patrón que las otras secciones, que sí tienen un link "Ver todo" a la
+  derecha, pero a esta se le olvidó agregarlo). Se sumó un link real "Ver
+  catálogo completo" en vez de dejar el wrapper vacío, y se cambió
+  `items-baseline` → `items-start` en ese header puntual (el único con
+  título + subtítulo de dos líneas del lado izquierdo — `items-baseline`
+  alineaba el link de la derecha con la línea del subtítulo en vez de con
+  el título).
+- [x] **CTA final del Home decía "Escribir por WhatsApp" pero en realidad
+  navegaba a `/contacto`** — un paso intermedio innecesario para un botón
+  que promete acción inmediata. Ahora linkea directo a `wa.me` (mismo
+  patrón que usa `/contacto`), con fallback a `/contacto` si
+  `NEXT_PUBLIC_WHATSAPP_NUMBER` no está seteado. Verificado:
+  `href="https://wa.me/..."` + `target="_blank"` reales en el botón.
+- [x] **Footer sin link a "Nosotros" ni a "Inicio"** — tenía Catálogo/
+  Envíos/FAQ/Contacto/WhatsApp pero faltaba Nosotros (única página
+  institucional ausente) y el wordmark "Gambeta" no era un link. Se
+  agregó el link a Nosotros y el wordmark ahora apunta a `/`.
+- [x] **Footer sin línea de copyright** — se sumó una línea final
+  "© {año actual} Gambeta. Todos los derechos reservados." (año calculado
+  con `new Date().getFullYear()`, no hardcodeado). Se descartó a propósito
+  una versión más larga que mencionaba explícitamente "catálogo de
+  ejemplo, sin pasarela de pago" — un footer que se auto-señala como demo
+  resta más de lo que suma en un sitio pensado para verse terminado; el
+  copyright simple es el estándar de cualquier e-commerce real.
+- [x] `README.md`: la lista de "Hecho" se actualizó para reflejar el
+  contenido nuevo del Home, la búsqueda editable y "también te puede
+  interesar" (antes describía la versión de 2 secciones del Home).
+- [x] Revisado sin encontrar problemas (o ya cubierto en pases previos,
+  confirmado de nuevo acá): `sitemap.ts` (excluye `/carrito` y `/admin`
+  correctamente, incluye las 5 institucionales + todos los productos
+  activos/agotados), `robots.ts` (`disallow: /admin`), 404/error
+  genéricos, tiles de categoría con nombre largo ("Botines de
+  entrenamiento") sin overflow ni en desktop ni en mobile (medido con
+  `getBoundingClientRect`, no a ojo), grep de `lorem`/`TODO`/`FIXME`/
+  placeholders sin resultados reales en `src/`.
+- [x] `npm run typecheck`, `npm run lint`, `npm run test` (13/13),
+  `npm run build`, `npm run test:e2e` (1/1) — los 5 limpios después de
+  este bloque. Verificado en navegador (desktop + 375px): Home, PDP,
+  Carrito, footer, y las 6 rutas de admin con sesión real — sin errores
+  de consola ni overflow horizontal.
