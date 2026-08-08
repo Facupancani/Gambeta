@@ -23,13 +23,38 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_TITLE = "Gambeta — Botines de fútbol";
+const SITE_DESCRIPTION =
+  "Botines, pelotas, canilleras y medias para jugadores amateurs apasionados por el fútbol. Coordinamos por WhatsApp.";
+
 export const metadata: Metadata = {
+  // Needed to resolve relative URLs (like the auto-detected icon.tsx/
+  // opengraph-image.tsx below) into absolute ones for og:image etc. Same
+  // env var already used by sitemap.ts/robots.ts.
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Gambeta — Botines de fútbol",
+    default: SITE_TITLE,
     template: "%s — Gambeta",
   },
-  description:
-    "Botines, pelotas, canilleras y medias para jugadores amateurs apasionados por el fútbol. Coordinamos por WhatsApp.",
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Gambeta",
+    locale: "es_AR",
+    type: "website",
+    // No `images` here on purpose — Next auto-detects opengraph-image.tsx
+    // (root) and each route's own (e.g. producto/[slug]) and merges them in.
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  // icon/apple-icon links are auto-injected from icon.tsx/apple-icon.tsx —
+  // no manual `icons` field needed.
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

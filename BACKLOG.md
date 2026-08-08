@@ -344,9 +344,11 @@ usuario:
 import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
 intentar destrabarlo desde acá).
 
-**Estado actual**: arrancando — próxima iteración: categoría C (hygiene
-técnica: error/not-found/loading + metadata/OG/favicon), por ser la base
-más barata y menos ambigua antes de entrar en decisiones de diseño (hero).
+**Estado actual**: categoría C (hygiene técnica) ✅ terminada y verificada
+(ver detalle abajo) — próxima iteración: categoría D (accesibilidad
+básica), sigue siendo terreno barato/poco ambiguo antes de entrar en
+categorías con decisiones de diseño (A, hero) o alcance más grande (G,
+tests).
 
 ### Checklist por categoría
 
@@ -372,18 +374,53 @@ más barata y menos ambigua antes de entrar en decisiones de diseño (hero).
   resto del sitio (sin mínimo de palabras fijo).
 - [ ] Sin lorem ipsum ni placeholders en ningún lado.
 
-**C. Hygiene técnica — routing / SEO / OG / favicon**
-- [ ] `error.tsx` on-brand en raíz, `(storefront)` y `admin`.
-- [ ] `not-found.tsx` on-brand en raíz y `(storefront)` (para que el
-  `notFound()` de la PDP ya no caiga en el 404 default de Next).
-- [ ] `loading.tsx` al menos en `(storefront)` y `admin`.
-- [ ] `layout.tsx` raíz: `metadataBase`, `openGraph`, `twitter`, `icons`.
-- [ ] `icon.tsx`/`apple-icon.png` reemplazando el favicon default de Next.
-- [ ] `opengraph-image.tsx` al menos en raíz (ideal: también en
-  `/catalogo` y `/producto/[slug]`).
-- [ ] Sacar los SVG default de Next sin usar en `public/` (file.svg,
-  globe.svg, next.svg, vercel.svg, window.svg) — confirmar antes que nada
-  los referencia.
+**C. Hygiene técnica — routing / SEO / OG / favicon** ✅ HECHO Y VERIFICADO
+- [x] `error.tsx` on-brand en raíz, `(storefront)` y `admin` (cubre
+  `/admin/login` y todo `/admin/(dashboard)/*`, ancestro común de ambos).
+  Confirmado contra la doc real de esta versión de Next
+  (`node_modules/next/dist/docs/.../error.md`) que la prop es `retry`, no
+  `reset` (breaking change vs. Next viejo) — los 3 archivos usan `retry`.
+- [x] `not-found.tsx` on-brand en raíz y `(storefront)` — el `notFound()`
+  de la PDP ahora cae en el de `(storefront)` (mantiene header/footer),
+  cualquier URL rota fuera de eso cae en el de raíz. Verificado en
+  navegador: `/esto-no-existe` → 404 de raíz; `/producto/no-existe` → 404
+  de storefront con header/footer/nav intactos (confirmado con
+  `read_page`, no solo texto).
+- [x] `loading.tsx` en `(storefront)` y `admin/(dashboard)` — genérico
+  (no imita el layout de una página específica, Next no permite
+  loading.tsx por-ruta sin carpetas anidadas por página).
+- [x] `layout.tsx` raíz: `metadataBase` (reusa `NEXT_PUBLIC_SITE_URL`,
+  mismo patrón que `sitemap.ts`/`robots.ts`), `openGraph`, `twitter`
+  (`summary_large_image`). `icons` no hace falta declararlo a mano —
+  Next lo autodetecta de `icon.tsx`/`apple-icon.tsx`.
+- [x] `icon.tsx` (32×32) y `apple-icon.tsx` (180×180) generados por código
+  con `next/og` `ImageResponse` — reemplazan el favicon default de Next
+  (`src/app/favicon.ico`, eliminado). Colores exactos sampleados de las
+  variables CSS reales corriendo la app (canvas probe, no adivinados
+  desde el oklch fuente): fondo `#090f0b`, verde `#32ce69`. Verificado:
+  `GET /icon` y `GET /apple-icon` devuelven 200 con las dimensiones
+  correctas.
+- [x] `opengraph-image.tsx` en raíz (1200×630, mismo esquema de color,
+  wordmark "GAMBETA" + eyebrow + barra verde) — verificado 200, dimensión
+  real 1200×630, y por canvas que el texto renderizó de verdad (11 colores
+  distintos muestreados: fondo, verde, blanco, grises de antialiasing —
+  no una imagen en blanco). La PDP ya tenía su propio OG dinámico (foto
+  real del producto) desde el pase de diseño anterior, así que el caso
+  más importante (compartir un link de producto) ya estaba cubierto.
+  **Intentado y descartado** un `opengraph-image.tsx` propio para
+  `/catalogo`: devuelve 404 de forma consistente (confirmado con `curl`
+  directo, reinicio de server, y `.next` limpio) cuando el archivo vive
+  anidado dentro de un route group (`(storefront)/catalogo/`), pero
+  funciona perfecto (200) en una carpeta anidada idéntica fuera de un
+  route group — parece un bug/limitación real de esta versión de Next con
+  archivos de metadata-imagen dentro de route groups anidados, no un
+  error de código. Como era un ítem "ideal" (no obligatorio) y el caso
+  que sí importa (PDP) ya funciona, se descartó en vez de seguir
+  investigando — si se necesita en el futuro, evaluar sacar `/catalogo`
+  del route group `(storefront)` o esperar un fix de Next.
+- [x] Sacados los SVG default de Next sin usar en `public/` (file.svg,
+  globe.svg, next.svg, vercel.svg, window.svg) — confirmado por grep que
+  nada los referenciaba antes de borrarlos.
 
 **D. Accesibilidad básica**
 - [ ] Input de `site-search.tsx` (una vez expandido) con label
