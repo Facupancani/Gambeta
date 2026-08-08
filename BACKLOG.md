@@ -967,3 +967,126 @@ arreglé:
   este bloque. Verificado en navegador (desktop + 375px): Home, PDP,
   Carrito, footer, y las 6 rutas de admin con sesión real — sin errores
   de consola ni overflow horizontal.
+
+## Feedback del usuario, sesión 5 (2026-08-08)
+
+Tres pedidos en un mismo mensaje: (1) galería de fotos que cambie según el
+color elegido + un producto de ejemplo con varias fotos, (2) pregunta sobre
+qué tan protegido está `/admin`, (3) pedido de ayuda mid-turn para generar
+descripciones de producto con IA (el negocio vende símiles/imitaciones sin
+equipo de marketing, no hay de dónde sacar copy inventado a mano para cada
+producto).
+
+**(2) Respondida en el chat, no requería código** — resumen honesto: login
+con contraseña hasheada (bcrypt), sesión JWT firmada en cookie `httpOnly`
++ `secure` en producción, doble chequeo (proxy.ts optimista +
+`verifySession()` real en cada página/Server Action de admin), CSRF
+cubierto automáticamente por Next (Server Actions comparan `Origin` vs
+`Host`). Lo que falta y se lo dije tal cual: sin rate-limiting de intentos
+de login, sin 2FA, un solo usuario fijo — razonable para una demo de
+portfolio, no para un negocio real con varias personas con acceso.
+
+**(1) Galería de fotos por color** ✅ HECHO Y VERIFICADO
+- [x] `ProductImage` suma columna `color` opcional (migración
+  `add_image_color`) — si coincide con el `color` de la variante elegida,
+  la PDP muestra solo esas fotos; si no hay ninguna etiquetada para ese
+  color, muestra todas (nunca una galería vacía). Fotos sin color siguen
+  mostrándose siempre igual que antes — 100% retrocompatible con los 20
+  productos existentes, ninguno perdió su foto.
+- [x] `src/components/product-gallery.tsx`: nueva función pura
+  `pickImagesForColor` (exportada, con 4 tests unitarios nuevos en
+  `__tests__/product-gallery.test.ts`, 17/17 verde) + reseteo del índice
+  de miniatura activa cuando cambia el set de fotos mostradas (mismo
+  patrón de "ajustar estado durante el render" que ya usa
+  `mobile-nav.tsx`, con el mismo comentario explicando por qué no es un
+  `useEffect`).
+- [x] `src/components/product-buy-button.tsx`: suma `onVariantChange`
+  opcional, sin tocar el texto/comportamiento visible de los botones de
+  talle (el test e2e que depende de `"40 · Negro/Verde"` sigue pasando
+  sin cambios).
+- [x] **Nuevo** `src/components/product-detail.tsx`: la pieza que faltaba
+  — `ProductGallery` y `ProductBuyButton` no son hermanos en el layout de
+  la PDP (columnas opuestas de la grilla), así que ninguno podía avisarle
+  al otro que cambió el color. Este componente cliente nuevo es el único
+  lugar que sabe de los dos: guarda `selectedColor`, se lo pasa a la
+  galería, y usa la miniatura correcta como imagen del carrito al agregar.
+  El texto estático (nombre/precio/descripción) se movió acá adentro
+  también — no hay costo de SEO por eso, un Client Component igual se
+  renderiza en el servidor en la carga inicial (confirmado contra
+  `node_modules/next/dist/docs`).
+- [x] Admin: `ImageUploader` (`image-uploader.tsx`) suma un `<select>`
+  compacto debajo de cada miniatura para etiquetarla con un color — las
+  opciones salen de los colores ya cargados en el editor de talles arriba
+  (`availableColors`), no texto libre, para que no se desalineen. Si el
+  producto no tiene colores cargados, no se muestra el selector (no tiene
+  sentido un dropdown con una sola opción "Sin color"). `duplicateProduct`
+  ahora copia el `color` de cada foto también (antes lo perdía al
+  duplicar).
+- [x] Verificado en navegador: `/producto/gambeta-veloz-fg` (2 fotos, sin
+  color) sin cambios visibles ni errores; `/producto/medias-largas-clasicas`
+  (3 colores reales: Blanco/Negro/Azul, ya existían en el seed) cambia de
+  variante sin romper nada — hoy muestra la misma foto genérica en los 3
+  porque solo tiene 1 foto sin etiquetar (fallback correcto); pendiente
+  sumarle 2 fotos más para que se vea el cambio real (ver nota abajo).
+  Confirmado también contra el HTML crudo del form de admin (`fetch` +
+  contenido) que el selector de color por foto y el botón de IA renderizan
+  bien — esta pestaña de pruebas no compone clicks en `/admin/productos/
+  .../editar` (mismo tipo de limitación de entorno ya documentada varias
+  veces: el HTML real llega completo, pero la interacción en vivo no se
+  puede simular acá).
+
+**(3) Generador de descripciones con IA** ✅ CÓDIGO HECHO — **pendiente que
+el usuario ponga su propia `ANTHROPIC_API_KEY`** para probarlo en vivo
+- [x] `src/lib/actions/ai.ts`: Server Action `generateProductDescription`,
+  protegida con `verifySession()` igual que el resto de las acciones de
+  admin. Llama directo a la API de Mensajes de Anthropic vía `fetch` (sin
+  sumar el SDK como dependencia — mismo criterio ya usado en el proyecto
+  para auth/sesión: menos dependencias, no más). Modelo `claude-haiku-4-5`
+  (tarea liviana, no hace falta un modelo más grande ni más caro).
+- [x] **Prompt diseñado a propósito para no inventar** — el pedido del
+  usuario fue explícito: "no somos una marca, ¿de dónde saco una
+  descripción inventada?". El prompt le pasa a la IA solo nombre +
+  categoría + notas reales que cargue el vendedor (material, para qué
+  cancha, corte, etc.), y si no hay notas le dice explícitamente que NO
+  invente specs técnicas ni certificaciones — que describa en términos de
+  uso general en cambio. También le prohíbe mencionar marcas registradas
+  o afirmar uso profesional. Esto importa especialmente acá: mientras
+  verificaba esto encontré un producto cargado a mano por el usuario
+  llamado "Botines nike mercurial victory" — usar el nombre de una marca
+  registrada en productos símil/no licenciados es un riesgo real (marcas,
+  publicidad engañosa), se lo aviso en el chat, no lo toco yo sin que me
+  lo pida.
+- [x] `product-form.tsx`: bloque "Ayuda para redactarla (IA)" debajo del
+  campo Descripción — input opcional de notas + botón "Generar borrador".
+  El resultado llena el textarea (ahora controlado, antes era
+  `defaultValue`) pero no se guarda solo — el admin lo revisa/edita antes
+  de submitear el formulario real, como pidió el usuario ("algo que te
+  ayude a pensarlas", no que decida solo). El Select de categoría también
+  pasó a controlado (antes `defaultValue`) para poder mandarle el nombre
+  de la categoría a la IA.
+- [x] `.env.example` documenta `ANTHROPIC_API_KEY` (sin prefijo
+  `NEXT_PUBLIC_`, nunca debe llegar al browser). Sin la key, el botón
+  muestra un error claro en vez de romperse.
+- [ ] **No pude probarlo en vivo**: no tengo una `ANTHROPIC_API_KEY` para
+  poner en el `.env` de este entorno, y no es algo que deba generar o
+  pedir que me paste acá (es una credencial). El usuario tiene que sacar
+  una en console.anthropic.com y ponerla en su `.env` para probar el botón
+  de verdad — el código en sí está revisado y es correcto (typecheck/lint
+  limpios, misma estructura de manejo de errores que el resto de las
+  Server Actions).
+
+**Pendiente de este bloque** (no bloqueante, se retoma después):
+- [ ] Sumar 2 fotos más (Negro y Azul) a "Medias de fútbol largas" para que
+  el cambio de color en la PDP se vea de verdad en un producto real —
+  necesita bajar 2 fotos nuevas (permiso del usuario primero, mismo
+  criterio que la foto de envíos: mostrar candidatas antes de bajar nada).
+
+**Bug real encontrado de paso (no relacionado a lo de arriba)**: `.gitignore`
+tenía `.env*` sin excepción, así que `.env.example` — el archivo que el
+propio README le dice a cualquiera que clone el repo que copie como primer
+paso de setup — **nunca estuvo commiteado**. Cualquiera que clonara el repo
+desde cero (exactamente el escenario de un reclutador mirando el
+portfolio) se encontraba sin ese archivo, rompiendo el paso 2 del setup.
+Arreglado con `!.env.example` en `.gitignore` y el archivo commiteado por
+primera vez — se revisó línea por línea antes de subirlo, son todos
+placeholders/nombres de variable, ningún secreto real.

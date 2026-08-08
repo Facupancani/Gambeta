@@ -34,8 +34,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — .env.example is the template and IS meant to be committed
+# (README's setup instructions depend on it existing in a fresh clone);
+# everything else (.env, .env.local, etc.) holds real secrets and stays out.
 .env*
+!.env.example
 
 # vercel
 .vercel

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ import { ImageUploader, type ProductImageItem } from "@/components/admin/image-u
 import { slugify } from "@/lib/slugify";
 import { STATUS_LABELS } from "@/lib/product-status";
 import type { ProductFormState } from "@/lib/actions/products";
+import { generateProductDescription } from "@/lib/actions/ai";
 
 type Category = { id: string; name: string };
 
@@ -56,12 +58,43 @@ export function ProductForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initial));
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
   const [variants, setVariants] = useState<VariantItem[]>(initial?.variants ?? []);
   const [images, setImages] = useState<ProductImageItem[]>(initial?.images ?? []);
 
   const handleNameChange = (value: string) => {
     setName(value);
     if (!slugTouched) setSlug(slugify(value));
+  };
+
+  // AI description helper — separate from the main `useActionState` above
+  // on purpose: it can't share that hook (its "form" would have to nest
+  // inside the outer <form>, which is invalid HTML), and calling the
+  // Server Action directly here is simpler than a second nested form.
+  const [aiNotes, setAiNotes] = useState("");
+  const [aiPending, setAiPending] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const handleGenerateDescription = async () => {
+    if (!name.trim()) {
+      setAiError("Escribí el nombre del producto primero.");
+      return;
+    }
+    setAiPending(true);
+    setAiError(null);
+    const categoryName = categories.find((c) => c.id === categoryId)?.name;
+    const result = await generateProductDescription({
+      name,
+      categoryName,
+      notes: aiNotes,
+    });
+    setAiPending(false);
+    if (result.error) {
+      setAiError(result.error);
+      return;
+    }
+    if (result.description) setDescription(result.description);
   };
 
   return (
@@ -105,7 +138,8 @@ export function ProductForm({
         <Textarea
           id="description"
           name="description"
-          defaultValue={initial?.description}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           rows={4}
           required
         />
@@ -114,6 +148,34 @@ export function ProductForm({
             {state.fieldErrors.description[0]}
           </p>
         )}
+
+        {/* No hay equipo de marketing acá — esto ayuda a redactar algo
+            razonable en vez de dejar el campo en blanco o copiar/pegar
+            genérico. El texto que devuelve es un borrador para revisar y
+            editar, no se guarda solo. */}
+        <div className="mt-1 rounded-lg border border-dashed border-border p-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-primary" />
+            <p className="text-xs font-medium">Ayuda para redactarla (IA)</p>
+          </div>
+          <Input
+            placeholder="Datos que tengas a mano: material, para qué cancha, color, corte... (opcional)"
+            value={aiNotes}
+            onChange={(e) => setAiNotes(e.target.value)}
+            className="mt-2"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            disabled={aiPending}
+            onClick={handleGenerateDescription}
+          >
+            {aiPending ? "Generando..." : "Generar borrador"}
+          </Button>
+          {aiError && <p className="mt-2 text-sm text-destructive">{aiError}</p>}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -152,7 +214,11 @@ export function ProductForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="categoryId">Categoría</Label>
-        <Select name="categoryId" defaultValue={initial?.categoryId}>
+        <Select
+          name="categoryId"
+          value={categoryId}
+          onValueChange={(value) => setCategoryId(value ?? "")}
+        >
           <SelectTrigger id="categoryId" className="w-full">
             <SelectValue>
               {(value: string) =>
@@ -184,7 +250,22 @@ export function ProductForm({
 
       <div className="flex flex-col gap-2">
         <Label>Fotos</Label>
-        <ImageUploader images={images} onChange={setImages} />
+        <ImageUploader
+          images={images}
+          onChange={setImages}
+          availableColors={[
+            ...new Set(
+              variants
+                .map((v) => v.color?.trim())
+                .filter((color): color is string => Boolean(color))
+            ),
+          ]}
+        />
+        <p className="text-xs text-muted-foreground">
+          Si el producto tiene más de un color, podés etiquetar cada foto con
+          el color que muestra — en la página del producto, elegir ese color
+          va a mostrar esa foto automáticamente.
+        </p>
         <input type="hidden" name="imagesJson" value={JSON.stringify(images)} />
       </div>
 
