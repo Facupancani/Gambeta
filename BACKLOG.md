@@ -399,15 +399,35 @@ alt text) antes de programar, como pide la nota de método:**
   esperados (`rgb(255,255,255)`/`rgb(0,0,0)` en "Ver catálogo"), sin
   errores de consola, sin overflow horizontal en 375px.
 
-**B. Contenido institucional (Nosotros/FAQ/Contacto/Envíos)**
-- [ ] Cada una de las 4 páginas suma al menos una imagen de stock real
-  (Cloudinary), on-brand.
-- [ ] Nosotros: algo más que un bloque único (ej. sección "cómo
-  trabajamos" o imagen de estilo de vida/producto) — no hace falta foto
-  real del equipo.
-- [ ] Las 4 páginas revisadas para que no se sientan "más finas" que el
-  resto del sitio (sin mínimo de palabras fijo).
-- [ ] Sin lorem ipsum ni placeholders en ningún lado.
+**B. Contenido institucional (Nosotros/FAQ/Contacto/Envíos)** ✅ HECHO Y
+VERIFICADO
+
+- [x] Las 4 páginas suman una imagen de stock real (Cloudinary) cada una,
+  vía `src/components/institutional-banner.tsx` (componente compartido,
+  banner ancho 21:9 con `objectPosition` configurable por página). Fotos
+  elegidas con el mismo criterio de descartar branding de terceros que
+  en la categoría A — de hecho se descartó una candidata para Nosotros
+  (partido amateur con un logo de sponsor "Elevato" visible en una
+  camiseta) y se reemplazó por otra sin ese problema antes de subirla:
+  - Nosotros: picadito amateur en una plaza (sin logos visibles).
+  - FAQ: manos revisando un botín gastado apoyado sobre una pelota.
+  - Contacto: alguien escribiendo un mensaje desde el celular.
+  - Envíos y pagos: caja de cartón simple, sin marcas de correo/courier.
+- [x] Nosotros ahora tiene una sección "Cómo trabajamos" (3 pasos con
+  ícono: elegís en el catálogo → coordinamos por WhatsApp → recibís
+  donde te quede cómodo), además de la foto — ya no es un bloque único.
+- [x] Las 4 páginas revisadas: con foto + (en Nosotros) los 3 pasos, ya
+  no se sienten más finas que el resto del sitio.
+- [x] Sin lorem ipsum ni placeholders — todo el copy ya era real desde
+  antes (confirmado en la auditoría inicial de este pase), solo se sumó
+  contenido, no se generó relleno.
+- [x] Verificado en navegador: las 4 páginas sin errores de consola, las
+  4 imágenes confirmadas end-to-end vía el optimizador de imágenes de
+  Next (200, `image/jpeg`) — el `<img>` en sí no se pudo confirmar
+  cargado visualmente en esta pestaña porque el lazy-loading depende de
+  `IntersectionObserver`, que no dispara sin compositing real (mismo
+  tipo de limitación de entorno ya documentada varias veces). Sin
+  overflow horizontal en 375px en las 4 páginas.
 
 **C. Hygiene técnica — routing / SEO / OG / favicon** ✅ HECHO Y VERIFICADO
 - [x] `error.tsx` on-brand en raíz, `(storefront)` y `admin` (cubre
