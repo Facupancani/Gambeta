@@ -309,3 +309,151 @@ para retomar en otro momento (ahora sigue con otra cosa, no tocar todavía):
   `bg-white text-black hover:bg-white/90`) en vez de tocar `--primary`.
   Confirmar con navegador que contrasta bien sobre la foto del hero nueva
   una vez que esa foto exista.
+
+*(Absorbido como categoría A de la sección siguiente — se sigue trackeando
+acá abajo, no hace falta volver a esta nota.)*
+
+## Pase "portfolio-ready" (loop autónomo, iniciado 2026-08-07, sesión 3)
+
+El usuario pidió reemplazar su propia posición en la creación: un loop
+autónomo (`/loop`, modo dinámico, sin intervalo fijo) que audite, planee y
+ejecute hasta que el sitio esté a nivel "profesional para portfolio" —
+UX/UI correcta, demo completa, todo excepto el deploy (que sigue bloqueado
+por el usuario, ver nota de Vercel arriba). Plan diseñado con un agente
+Explore (auditoría read-only del estado actual) + un agente Plan
+(estructura de este pase), y 4 preguntas de alcance ya respondidas por el
+usuario:
+
+1. **Páginas institucionales**: ahora SÍ entran en alcance (antes estaban
+   explícitamente excluidas).
+2. **Tests**: sí, sumar una suite básica (Vitest + Playwright) como parte
+   de "profesional".
+3. **Git**: commit + push seguido a la rama actual (`docs/design-pass-plan`,
+   ya trackea `origin/docs/design-pass-plan` y tiene el PR #1 abierto —
+   **no crear rama nueva**, seguir ahí: es descendiente fast-forward de
+   `master` y el PR #1 ya cuenta la historia completa scaffold→pulido, así
+   que conviene que este pase sea el mismo hilo). PR #1 se actualiza
+   (descripción/checklist) en cada hito, se abre a revisión del usuario
+   recién cuando se cumpla la condición de cierre de abajo — el merge es
+   decisión del usuario, no del loop.
+4. **Check-ins**: avisar al usuario en cada hito (una categoría completa),
+   no en cada micro-cambio, no en silencio total.
+
+**Fuera de alcance, no tocar**: todo lo que ya está en "V2" más abajo
+(Mercado Pago, cuentas/wishlist/reviews/cupones, dashboard de analítica,
+import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
+intentar destrabarlo desde acá).
+
+**Estado actual**: arrancando — próxima iteración: categoría C (hygiene
+técnica: error/not-found/loading + metadata/OG/favicon), por ser la base
+más barata y menos ambigua antes de entrar en decisiones de diseño (hero).
+
+### Checklist por categoría
+
+**A. Hero / impacto visual (Home)**
+- [ ] Foto de stock real en el hero (Nike/Adidas/MYR de referencia), misma
+  autorización de licencia libre ya usada para las 9 fotos del catálogo,
+  subida a Cloudinary igual que esas.
+- [ ] 2-3 opciones de composición/foto propuestas y una elegida, con el
+  porqué documentado acá (nota de método del usuario).
+- [ ] `Button` `variant="invert"` (`bg-white text-black hover:bg-white/90`)
+  nuevo en `src/components/ui/button.tsx`, usado solo en el CTA "Ver
+  catálogo" del hero — excepción puntual, no cambia `--primary` global.
+- [ ] Verificado en navegador: contraste ok sobre la foto real, responsive
+  sin overflow en 375px y desktop.
+
+**B. Contenido institucional (Nosotros/FAQ/Contacto/Envíos)**
+- [ ] Cada una de las 4 páginas suma al menos una imagen de stock real
+  (Cloudinary), on-brand.
+- [ ] Nosotros: algo más que un bloque único (ej. sección "cómo
+  trabajamos" o imagen de estilo de vida/producto) — no hace falta foto
+  real del equipo.
+- [ ] Las 4 páginas revisadas para que no se sientan "más finas" que el
+  resto del sitio (sin mínimo de palabras fijo).
+- [ ] Sin lorem ipsum ni placeholders en ningún lado.
+
+**C. Hygiene técnica — routing / SEO / OG / favicon**
+- [ ] `error.tsx` on-brand en raíz, `(storefront)` y `admin`.
+- [ ] `not-found.tsx` on-brand en raíz y `(storefront)` (para que el
+  `notFound()` de la PDP ya no caiga en el 404 default de Next).
+- [ ] `loading.tsx` al menos en `(storefront)` y `admin`.
+- [ ] `layout.tsx` raíz: `metadataBase`, `openGraph`, `twitter`, `icons`.
+- [ ] `icon.tsx`/`apple-icon.png` reemplazando el favicon default de Next.
+- [ ] `opengraph-image.tsx` al menos en raíz (ideal: también en
+  `/catalogo` y `/producto/[slug]`).
+- [ ] Sacar los SVG default de Next sin usar en `public/` (file.svg,
+  globe.svg, next.svg, vercel.svg, window.svg) — confirmar antes que nada
+  los referencia.
+
+**D. Accesibilidad básica**
+- [ ] Input de `site-search.tsx` (una vez expandido) con label
+  visible o `aria-label`/`aria-labelledby`.
+- [ ] Link "saltar al contenido" en el layout raíz, apuntando a `<main>`.
+- [ ] Chequeo manual de contraste de `--muted-foreground` sobre el fondo
+  oscuro para texto chico (WCAG AA, 4.5:1) — ajustar el token si no pasa,
+  documentar el resultado igual si pasa.
+- [ ] Pasada de tab-order/foco visible en storefront y admin.
+
+**E. Pulido del panel admin**
+- [ ] Dashboard: actividad reciente (últimos N productos creados/editados)
+  además de las 3 stat cards que ya hay — sin librería de gráficos, una
+  lista/tabla alcanza.
+- [ ] Paginación en `/admin/productos` (una vez crezca el seed, ver F).
+- [ ] Buscador/filtro por nombre en `/admin/productos` (categoría/estado
+  es nice-to-have, no obligatorio).
+- [ ] Loading states (`loading.tsx` o skeleton inline) en listados/detalle
+  de admin.
+
+**F. Datos de demo (seed)**
+- [ ] Catálogo ampliado más allá de 9 productos (apuntar a ~20-30, para
+  que la paginación/búsqueda de E tengan sentido real) — categorías
+  realistas, se puede sumar 1-2 más si suma (ej. "Botines de
+  entrenamiento").
+- [ ] Galería de imágenes en la PDP: 2-3 fotos por producto en vez de 1
+  (el modelo `ProductImage` ya soporta múltiples — confirmar antes de
+  asumir que hace falta tocar el schema).
+- [ ] Mantener al menos un producto `SOLD_OUT` (ya existe, no perderlo).
+
+**G. Tests**
+- [ ] Vitest configurado (`vitest.config.mts`, `__tests__/` en la raíz,
+  siguiendo la guía oficial de Next 16 en
+  `node_modules/next/dist/docs/01-app/02-guides/testing/vitest.md`) con
+  tests de `formatPrice` (`src/lib/format.ts`), `slugify`
+  (`src/lib/slugify.ts`) y lógica del carrito (`src/lib/cart-context.tsx`).
+- [ ] Playwright (`@playwright/test`, no el wrapper experimental
+  `next experimental-test`) con 1-2 specs e2e del flujo crítico: catálogo
+  → PDP → carrito → link de checkout de WhatsApp generado bien.
+- [ ] Scripts nuevos en `package.json`: `test`, `test:e2e`, `typecheck`.
+- [ ] Los 4 comandos (`lint`, `typecheck`, `test`, `test:e2e`) pasan limpios.
+
+**H. Housekeeping**
+- [ ] `README.md`: sección "Estado del proyecto" actualizada (carrito y
+  CRUD de admin ya NO están pendientes, están hechos) y sacar la
+  referencia a la ruta local del plan (`C:\Users\facup\...`).
+- [ ] `BACKLOG.md` actualizado en cada iteración, no solo al final.
+
+### Condición de cierre (el loop se para solo cuando se cumple TODO esto)
+1. Todos los ítems de A-H tildados (o marcados como excepción documentada
+   y aceptada, mismo patrón que el bloqueo de Vercel).
+2. `npm run build` limpio.
+3. `npm run typecheck` limpio.
+4. `npm run test` y `npm run test:e2e` pasan.
+5. `npm run lint` limpio.
+6. Pasada final completa en navegador (desktop + 375px mobile) por Home,
+   Catálogo, PDP, Carrito, las 4 institucionales, error/not-found
+   provocados a propósito, y admin (dashboard/productos con
+   paginación-búsqueda/categorías) — sin errores de consola, sin overflow
+   horizontal.
+7. `README.md` sin secciones desactualizadas.
+8. PR #1 actualizado con la descripción final, listo para que el usuario
+   decida cuándo revisar/mergear (el loop no mergea).
+9. Mensaje final al usuario resumiendo todo el recorrido, aclarando que
+   el deploy a Vercel sigue siendo el único paso pendiente y por qué (ver
+   bloqueo documentado arriba).
+
+Ante una decisión ambigua de "qué tan terminado es suficiente" (ej. si una
+foto institucional ya suma lo necesario), el criterio es seguir con juicio
+propio y documentar la decisión acá (mismo tono que "Notas / bloqueos"),
+no parar a preguntar — los check-ins son por hito, no por micro-decisión.
+Preguntar solo ante bloqueos reales (credenciales, decisiones de negocio
+ambiguas), no ante juicio estético dentro de la latitud ya autorizada.
