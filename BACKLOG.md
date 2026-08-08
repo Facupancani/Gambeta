@@ -853,7 +853,52 @@ usuario antes de continuar con el resto del pase):
   (necesario porque otra sesión de chat ya tenía el puerto 3000 tomado al
   arrancar este pase).
 
-### Bloque 2 — mejoras propias (en curso)
+### Bloque 2 — mejoras propias ✅ HECHO Y VERIFICADO
 
 Trabajo autónomo pedido por el usuario, sin pausar para check-in salvo
-bloqueo real. Se va documentando acá a medida que se completa cada ítem.
+bloqueo real.
+
+- [x] **Tiles de categoría con foto de fondo.** La grilla "Explorá por
+  categoría" del home (Bloque 1) quedó anotada como pendiente de pulir —
+  hoy la resolví con el mismo tratamiento visual del hero: la query de
+  `page.tsx` ahora trae, por categoría, la foto del producto más reciente
+  que tenga imagen real (`products: { where: { images: { some: {} } },
+  take: 1, orderBy: createdAt desc }` + su primera `ProductImage`) — sin
+  bajar ningún asset nuevo, reutiliza fotos que ya existen. Si una
+  categoría no tiene ningún producto con foto (no pasó en la práctica: las
+  5 categorías reales tienen al menos un producto fotografiado), el tile
+  cae al tratamiento anterior (ícono + fondo `bg-card`) en vez de romper.
+  Con foto: `next/image` `fill` + el mismo scrim `bg-gradient-to-t`
+  oscuro del hero, ícono y texto en blanco encima. Verificado en
+  navegador: las 5 categorías (Botines, Pelotas, Canilleras, Medias,
+  Botines de entrenamiento) renderizan con `<img>` de fondo, sin errores
+  de consola.
+- [x] **PDP: sección "También te puede interesar".**
+  `producto/[slug]/page.tsx` suma una query de hasta 4 productos de la
+  misma categoría (excluyendo el actual, mismo filtro `status !==
+  PAUSED` que ya usa el catálogo), renderizados con el `ProductCard` ya
+  existente (mismo componente que Home/Catálogo, no uno nuevo) — así el
+  quick-add "+" funciona igual ahí también. Es cross-sell simple por
+  categoría, no un algoritmo de similitud. Sección oculta si la categoría
+  no tiene otros productos (no rompe con categorías chicas). Verificado
+  en `/producto/gambeta-veloz-fg`: muestra 4 botines distintos al actual,
+  incluido el que está `SOLD_OUT` con su badge "Agotado" correcto.
+- [x] **Auditoría de metadata institucional.** De las 7 páginas del
+  storefront, 2 tenían huecos: `/faq` no tenía `description` (se agregó) y
+  `/carrito` no tenía metadata en absoluto porque su `page.tsx` es Client
+  Component (`useCart`) — `metadata`/`generateMetadata` son
+  Server-Component-only (confirmado contra
+  `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-metadata.md`,
+  que además documenta el patrón exacto a seguir: mover la lógica de
+  cliente a un componente separado y dejar `page.tsx` como Server
+  Component). Se extrajo todo el contenido a
+  `src/components/cart-view.tsx` (`CartView`, mismo código, solo movido)
+  y `carrito/page.tsx` quedó como Server Component con `metadata` +
+  `<CartView />`. Verificado: `document.title` en `/carrito` ahora es
+  "Carrito — Gambeta" (antes heredaba el título genérico del layout raíz).
+  Las otras 5 páginas (Home, Catálogo, Nosotros, Envíos y pagos, Contacto)
+  ya tenían title+description completos, sin cambios.
+- [x] Verificado con navegador (desktop + 375px) + suite completa después
+  de este bloque: `npm run typecheck`, `npm run lint`, `npm run test`
+  (13/13), `npm run build`, `npm run test:e2e` (1/1) — los 5 limpios. Sin
+  errores de consola ni overflow horizontal en Home, PDP y Carrito.

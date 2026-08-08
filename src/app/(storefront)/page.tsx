@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { CategoryIcon } from "@/lib/category-icon";
 import { FAQS } from "@/lib/faqs";
+import { cn } from "@/lib/utils";
 
 // Hero photo — chosen over 2 other candidates (one had real sponsor logos
 // and an ad banner visible, unusable; another was portrait-oriented with a
@@ -89,10 +90,20 @@ export default async function HomePage() {
     // createdAt asc (not name asc, unlike the catalog's filter pills) so
     // the grid below follows the seed's intentional order — botines
     // first, entrenamiento last — instead of falling alphabetically.
+    // Also pulls one real product photo per category (no new asset —
+    // reuses whatever's already attached to a product in that category)
+    // for the tile background; categories where every product still uses
+    // the icon-only fallback just render without a photo.
     prisma.category.findMany({
       orderBy: { createdAt: "asc" },
       include: {
         _count: { select: { products: { where: { status: { not: "PAUSED" } } } } },
+        products: {
+          where: { status: { not: "PAUSED" }, images: { some: {} } },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          include: { images: { orderBy: { order: "asc" }, take: 1 } },
+        },
       },
     }),
   ]);
@@ -177,26 +188,60 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/catalogo?categoria=${category.slug}`}
-                className="group flex aspect-square flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card p-4 text-center transition-colors hover:border-foreground/40"
-              >
-                <CategoryIcon
-                  categorySlug={category.slug}
-                  className="size-8 text-muted-foreground transition-colors group-hover:text-primary"
-                  strokeWidth={1.5}
-                />
-                <div>
-                  <p className="font-heading font-medium">{category.name}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {category._count.products}{" "}
-                    {category._count.products === 1 ? "producto" : "productos"}
-                  </p>
-                </div>
-              </Link>
-            ))}
+            {categories.map((category) => {
+              const photoUrl = category.products[0]?.images[0]?.url;
+              return (
+                <Link
+                  key={category.id}
+                  href={`/catalogo?categoria=${category.slug}`}
+                  className="group relative flex aspect-square flex-col items-center justify-center gap-3 overflow-hidden rounded-xl border border-border bg-card p-4 text-center transition-colors hover:border-foreground/40"
+                >
+                  {photoUrl && (
+                    <>
+                      <Image
+                        src={photoUrl}
+                        alt=""
+                        fill
+                        sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      {/* Same dark scrim treatment as the hero, just
+                          radial-ish via a flat bottom-heavy gradient —
+                          keeps icon/name legible over any photo without
+                          needing a per-photo crop check. */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/10" />
+                    </>
+                  )}
+                  <CategoryIcon
+                    categorySlug={category.slug}
+                    className={cn(
+                      "relative z-10 size-8 transition-colors group-hover:text-primary",
+                      photoUrl ? "text-white" : "text-muted-foreground"
+                    )}
+                    strokeWidth={1.5}
+                  />
+                  <div className="relative z-10">
+                    <p
+                      className={cn(
+                        "font-heading font-medium",
+                        photoUrl && "text-white"
+                      )}
+                    >
+                      {category.name}
+                    </p>
+                    <p
+                      className={cn(
+                        "mt-0.5 text-xs",
+                        photoUrl ? "text-white/75" : "text-muted-foreground"
+                      )}
+                    >
+                      {category._count.products}{" "}
+                      {category._count.products === 1 ? "producto" : "productos"}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

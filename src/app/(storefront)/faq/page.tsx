@@ -4,6 +4,8 @@ import { FAQS } from "@/lib/faqs";
 
 export const metadata: Metadata = {
   title: "Preguntas frecuentes",
+  description:
+    "Cómo comprar, envíos, stock y talles — las dudas más comunes antes de pedir.",
 };
 
 // Free-license stock photo (Unsplash) — hands checking a worn boot resting
