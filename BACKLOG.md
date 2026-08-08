@@ -344,25 +344,60 @@ usuario:
 import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
 intentar destrabarlo desde acá).
 
-**Estado actual**: categorías C, D, E, F, G y H ✅ terminadas y
-verificadas (ver detalle abajo) — quedan solo A (hero) y B
-(institucionales), las dos categorías de decisión de diseño, guardadas
-para el final a propósito (nota de método del usuario: proponer 2-3
-opciones antes de programar). Próxima iteración: A.
+**Estado actual**: categorías A, C, D, E, F, G y H ✅ terminadas y
+verificadas (ver detalle abajo) — queda solo B (institucionales), la
+última categoría del checklist. Próxima iteración: B, y con eso se
+cumple la condición de cierre (ver más abajo) salvo por la verificación
+final completa.
 
 ### Checklist por categoría
 
-**A. Hero / impacto visual (Home)**
-- [ ] Foto de stock real en el hero (Nike/Adidas/MYR de referencia), misma
-  autorización de licencia libre ya usada para las 9 fotos del catálogo,
-  subida a Cloudinary igual que esas.
-- [ ] 2-3 opciones de composición/foto propuestas y una elegida, con el
-  porqué documentado acá (nota de método del usuario).
-- [ ] `Button` `variant="invert"` (`bg-white text-black hover:bg-white/90`)
-  nuevo en `src/components/ui/button.tsx`, usado solo en el CTA "Ver
-  catálogo" del hero — excepción puntual, no cambia `--primary` global.
-- [ ] Verificado en navegador: contraste ok sobre la foto real, responsive
-  sin overflow en 375px y desktop.
+**A. Hero / impacto visual (Home)** ✅ HECHO Y VERIFICADO
+
+**3 opciones de foto comparadas (bajadas y miradas de verdad, no solo por
+alt text) antes de programar, como pide la nota de método:**
+1. **Descartada** — foto de un partido amateur en cancha sintética,
+   buena luz, PERO tiene logos de sponsors reales en las camisetas
+   (`TARGOBANK`) y un cartel publicitario de una marca de apuestas rusa
+   (`ВУЛКАН`) bien visible de fondo. Inutilizable — no se puede poner
+   publicidad de terceros (y menos de apuestas) en el hero.
+2. **Elegida** — jugador en movimiento (motion blur) pateando al arco de
+   noche, cielo nocturno ocupando ~65% del cuadro (casi negro ya de
+   base), luces de estadio como puntos pequeños de fondo. Horizontal
+   (1600×895, encaja perfecto con un hero ancho), paleta oscura que
+   combina directo con el fondo de la marca sin pelearse, y sin ningún
+   logo/marca real visible más que el nombre borroso e ilegible de la
+   pelota. La que mejor cumple el patrón Nike investigado
+  ("tipografía enorme y segura... la foto de producto/acción siempre al
+  frente").
+3. **Descartada** — jugador pateando, ángulo bajo dramático, MUY vistosa,
+  pero vertical/retrato (no una relación de aspecto horizontal para un
+  hero ancho) y con un cielo celeste-grisáceo que no combina con la
+  paleta negra de la marca; hubiera necesitado recortar tanto que se
+  perdía el impacto.
+
+**Implementación:**
+- [x] Foto (opción 2) subida a Cloudinary (`gambeta/hero/`, licencia
+  libre Unsplash, misma autorización ya vigente).
+- [x] Hero rediseñado en `src/app/(storefront)/page.tsx`: foto de fondo
+  full-bleed (`next/image` `fill` + `priority`, es el LCP de la Home)
+  con dos scrims (`bg-gradient-to-r` de izquierda a derecha y
+  `bg-gradient-to-t` abajo) — el scrim izquierdo arranca en
+  `from-background` (100% opaco, sin `/valor`), así que donde arranca el
+  texto (borde izquierdo) el color efectivo es sólido, idéntico a un
+  hero sin foto — contraste garantizado por construcción, no por suerte.
+  Confirmado inspeccionando el `background-image` computado real del
+  navegador (el stop del 0% es el `--background` sólido, sin alpha).
+- [x] `Button` `variant="invert"` (`bg-white text-black hover:bg-white/90`)
+  nuevo en `button.tsx`, usado solo en "Ver catálogo" — excepción puntual
+  documentada en el propio código, no toca `--primary`. "Conocenos" pasó
+  a variant outline con estilos blancos sobre transparente (antes
+  dependía de los tokens de fondo sólido, que ya no aplican sobre una
+  foto).
+- [x] Verificado en navegador: `GET` de la imagen 200, `naturalWidth`/
+  `naturalHeight` reales (no rota), botones con los colores exactos
+  esperados (`rgb(255,255,255)`/`rgb(0,0,0)` en "Ver catálogo"), sin
+  errores de consola, sin overflow horizontal en 375px.
 
 **B. Contenido institucional (Nosotros/FAQ/Contacto/Envíos)**
 - [ ] Cada una de las 4 páginas suma al menos una imagen de stock real
