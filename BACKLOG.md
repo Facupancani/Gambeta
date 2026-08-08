@@ -344,11 +344,9 @@ usuario:
 import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
 intentar destrabarlo desde acá).
 
-**Estado actual**: categorías C y D ✅ terminadas y verificadas (ver
-detalle abajo) — próxima iteración: categoría F (ampliar seed data)
-primero, porque el ítem de paginación de la categoría E no se puede
-probar en serio con solo 9 productos; después sí, E (pulido del panel
-admin) con datos reales para validar paginación/búsqueda.
+**Estado actual**: categorías C, D y F ✅ terminadas y verificadas (ver
+detalle abajo) — próxima iteración: categoría E (pulido del panel admin),
+ahora con 20 productos reales para que paginación/búsqueda tengan sentido.
 
 ### Checklist por categoría
 
@@ -466,15 +464,41 @@ admin) con datos reales para validar paginación/búsqueda.
 - [ ] Loading states (`loading.tsx` o skeleton inline) en listados/detalle
   de admin.
 
-**F. Datos de demo (seed)**
-- [ ] Catálogo ampliado más allá de 9 productos (apuntar a ~20-30, para
-  que la paginación/búsqueda de E tengan sentido real) — categorías
-  realistas, se puede sumar 1-2 más si suma (ej. "Botines de
-  entrenamiento").
-- [ ] Galería de imágenes en la PDP: 2-3 fotos por producto en vez de 1
-  (el modelo `ProductImage` ya soporta múltiples — confirmar antes de
-  asumir que hace falta tocar el schema).
-- [ ] Mantener al menos un producto `SOLD_OUT` (ya existe, no perderlo).
+**F. Datos de demo (seed)** ✅ HECHO Y VERIFICADO
+- [x] Catálogo ampliado de 9 a **20 productos**, categoría nueva
+  **"Botines de entrenamiento"** (slug `entrenamiento`) sumada a las 4
+  que ya había → 5 categorías. 11 productos nuevos en `prisma/seed.ts`
+  (2 botines, 2 pelotas, 2 canilleras, 2 medias, 3 entrenamiento), mismo
+  estilo de copy/precios que los 9 originales. Corrido `npm run db:seed`
+  contra la base real — idempotente (upsert por slug), no pisó nada de
+  lo que ya había.
+- [x] Galería de imágenes en la PDP: confirmado que `ProductImage` ya
+  soportaba múltiples por producto (no hizo falta tocar el schema).
+  Se construyó `src/components/product-gallery.tsx` (Client Component
+  con selector de miniaturas, foto principal + tira de thumbnails,
+  `aria-label`/`aria-current` en cada miniatura) y se integró en la PDP
+  reemplazando la imagen estática. Con 1 sola foto (o ninguna) se ve
+  igual que antes — la tira de miniaturas solo aparece con 2+ fotos.
+  **Verificado con click real** (no simulado): en `/producto/gambeta-veloz-fg`
+  se clickeó la segunda miniatura y se confirmó por `<img src>` que la
+  foto principal cambió a la segunda URL de Cloudinary — funciona de
+  punta a punta. Se sumó una 2ª foto de galería a 3 productos
+  representativos (`gambeta-veloz-fg`, `gambeta-elite-x`,
+  `pelota-matchball-n5`) en vez de a los 20 — criterio propio: mostrar la
+  capacidad real en una muestra en vez de gastar mucho tiempo bajando
+  fotos para cada producto, ver nota de `prisma/seed-images.ts`.
+- [x] 6 de los 11 productos nuevos tienen foto real (los 3 de
+  "entrenamiento" + 2 pelotas + 1 botín); los otros 5 (2 canilleras, 2
+  medias, 1 botín) usan el fallback de ícono+texto por categoría que ya
+  existía — mismo patrón intencional documentado en el pase de diseño
+  anterior, no es un hueco. 9 fotos nuevas (Unsplash, licencia libre)
+  subidas a Cloudinary vía `prisma/seed-images.ts` extendido con una
+  segunda lista (`GALLERY_ADDITIONS`) que suma una foto sin borrar la
+  que ya había, a diferencia de `IMAGES` que sí reemplaza — evita que
+  correr el script de nuevo pise la primera foto de un producto con
+  galería.
+- [x] `Botines Gambeta Elite X` sigue `SOLD_OUT` (badge "Agotado"
+  confirmado en el catálogo).
 
 **G. Tests**
 - [ ] Vitest configurado (`vitest.config.mts`, `__tests__/` en la raíz,

@@ -1,12 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { ProductBuyButton } from "@/components/product-buy-button";
-import { CategoryIcon } from "@/lib/category-icon";
+import { ProductGallery } from "@/components/product-gallery";
 
 type Params = Promise<{ slug: string }>;
 
@@ -55,27 +54,12 @@ export default async function ProductPage({ params }: { params: Params }) {
         Volver al catálogo
       </Link>
       <div className="grid gap-10 sm:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-xl bg-secondary">
-          {mainImage ? (
-            <Image
-              src={mainImage.url}
-              alt={product.name}
-              fill
-              sizes="(min-width: 640px) 50vw, 100vw"
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
-              <CategoryIcon
-                categorySlug={product.category.slug}
-                className="size-16"
-                strokeWidth={1.25}
-              />
-              <span className="text-sm">{product.category.name}</span>
-            </div>
-          )}
-        </div>
+        <ProductGallery
+          images={product.images}
+          productName={product.name}
+          categorySlug={product.category.slug}
+          categoryName={product.category.name}
+        />
 
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
