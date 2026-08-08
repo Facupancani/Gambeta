@@ -37,23 +37,23 @@ const STORY_IMAGE_URL =
 const TRUST_POINTS = [
   {
     icon: MessageCircle,
-    title: "Coordinás por WhatsApp",
-    description: "Hablás directo con nosotros, sin formularios ni esperas.",
+    title: "Atención por WhatsApp",
+    description: "Asesoramiento personalizado, sin formularios ni intermediarios.",
   },
   {
     icon: Truck,
     title: "Envíos a todo el país",
-    description: "O retirás en persona si te queda cerca.",
+    description: "Retiro en persona disponible según tu ubicación.",
   },
   {
     icon: ShieldCheck,
-    title: "Stock confirmado",
-    description: "Te avisamos disponibilidad real antes de que pagues.",
+    title: "Stock verificado",
+    description: "Confirmamos disponibilidad real antes de coordinar el pago.",
   },
   {
     icon: CreditCard,
-    title: "Pago como te quede cómodo",
-    description: "Transferencia, efectivo, lo que arreglemos juntos.",
+    title: "Pago flexible",
+    description: "Transferencia bancaria o efectivo, a coordinar.",
   },
 ];
 
@@ -95,11 +95,12 @@ export default async function HomePage() {
     // Also pulls one real product photo per category (no new asset —
     // reuses whatever's already attached to a product in that category)
     // for the tile background; categories where every product still uses
-    // the icon-only fallback just render without a photo.
+    // the icon-only fallback just render without a photo. No product
+    // count anymore — with only a handful of items per category, showing
+    // "1 producto" read as thin rather than reassuring.
     prisma.category.findMany({
       orderBy: { createdAt: "asc" },
       include: {
-        _count: { select: { products: { where: { status: { not: "PAUSED" } } } } },
         products: {
           where: { status: { not: "PAUSED" }, images: { some: {} } },
           orderBy: { createdAt: "desc" },
@@ -147,7 +148,8 @@ export default async function HomePage() {
               of that sentence now lives in the trust strip right below,
               where it actually reads as reassurance instead of a pitch. */}
           <p className="max-w-lg text-lg text-white/85">
-            Menos vitrina, más cancha.
+            Los mejores partidos empiezan antes de pisar la cancha. Empezá por
+            tus botines.
           </p>
           <div className="flex gap-3">
             <Button
@@ -173,7 +175,9 @@ export default async function HomePage() {
             <div key={point.title} className="flex flex-col gap-1.5">
               <point.icon className="size-5 text-primary" strokeWidth={1.5} />
               <p className="text-sm font-medium">{point.title}</p>
-              <p className="text-xs text-muted-foreground">{point.description}</p>
+              <p className="text-xs text-muted-foreground">
+                {point.description}
+              </p>
             </div>
           ))}
         </div>
@@ -183,7 +187,9 @@ export default async function HomePage() {
         <section className="mx-auto max-w-6xl px-4 py-16">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-heading text-2xl font-bold">Explorá por categoría</h2>
+              <h2 className="font-heading text-2xl font-bold">
+                Explorá por categoría
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Todo lo que necesitás para jugar, en un solo lugar.
               </p>
@@ -224,29 +230,18 @@ export default async function HomePage() {
                     categorySlug={category.slug}
                     className={cn(
                       "relative z-10 size-8 transition-colors group-hover:text-primary",
-                      photoUrl ? "text-white" : "text-muted-foreground"
+                      photoUrl ? "text-white" : "text-muted-foreground",
                     )}
                     strokeWidth={1.5}
                   />
-                  <div className="relative z-10">
-                    <p
-                      className={cn(
-                        "font-heading font-medium",
-                        photoUrl && "text-white"
-                      )}
-                    >
-                      {category.name}
-                    </p>
-                    <p
-                      className={cn(
-                        "mt-0.5 text-xs",
-                        photoUrl ? "text-white/75" : "text-muted-foreground"
-                      )}
-                    >
-                      {category._count.products}{" "}
-                      {category._count.products === 1 ? "producto" : "productos"}
-                    </p>
-                  </div>
+                  <p
+                    className={cn(
+                      "relative z-10 font-heading font-medium",
+                      photoUrl && "text-white",
+                    )}
+                  >
+                    {category.name}
+                  </p>
                 </Link>
               );
             })}
@@ -258,7 +253,10 @@ export default async function HomePage() {
         <section className="mx-auto max-w-6xl px-4 pb-16">
           <div className="flex items-baseline justify-between">
             <h2 className="font-heading text-2xl font-bold">Recién llegados</h2>
-            <Link href="/catalogo" className="text-sm text-foreground underline-offset-4 hover:underline">
+            <Link
+              href="/catalogo"
+              className="text-sm text-foreground underline-offset-4 hover:underline"
+            >
               Ver todo
             </Link>
           </div>
@@ -290,13 +288,18 @@ export default async function HomePage() {
             {STEPS.map((step, index) => (
               <div key={step.title}>
                 <div className="flex items-center gap-2">
-                  <step.icon className="size-5 text-primary" strokeWidth={1.5} />
+                  <step.icon
+                    className="size-5 text-primary"
+                    strokeWidth={1.5}
+                  />
                   <span className="font-heading text-sm text-muted-foreground">
                     Paso {index + 1}
                   </span>
                 </div>
                 <h3 className="mt-2 font-medium">{step.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {step.description}
+                </p>
               </div>
             ))}
           </div>
@@ -329,11 +332,10 @@ export default async function HomePage() {
               Nace de la pasión por el fútbol de todos los días
             </h2>
             <p className="mt-4 text-muted-foreground">
-              El fútbol 5 de los miércoles, el picadito con amigos, el
-              potrero del barrio. Elegimos cada producto pensando en quien
-              juega por gusto, no por vitrina — buena relación
-              precio-calidad, sin vueltas y con asesoramiento real por
-              WhatsApp en cada pedido.
+              El fútbol 5 de los miércoles, el picadito con amigos, el potrero
+              del barrio. Elegimos cada producto pensando en quien juega por
+              gusto, no por vitrina — buena relación precio-calidad, sin vueltas
+              y con asesoramiento real por WhatsApp en cada pedido.
             </p>
             <Button
               className="mt-6"
@@ -348,8 +350,13 @@ export default async function HomePage() {
       <section className="border-t border-border/60">
         <div className="mx-auto max-w-6xl px-4 py-16">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-heading text-2xl font-bold">Preguntas frecuentes</h2>
-            <Link href="/faq" className="text-sm text-foreground underline-offset-4 hover:underline">
+            <h2 className="font-heading text-2xl font-bold">
+              Preguntas frecuentes
+            </h2>
+            <Link
+              href="/faq"
+              className="text-sm text-foreground underline-offset-4 hover:underline"
+            >
               Ver todas
             </Link>
           </div>
@@ -388,10 +395,10 @@ export default async function HomePage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Escribir por WhatsApp
+                    Escribinos por WhatsApp
                   </a>
                 ) : (
-                  <Link href="/contacto">Escribir por WhatsApp</Link>
+                  <Link href="/contacto">Escribinos por WhatsApp</Link>
                 )
               }
             />
