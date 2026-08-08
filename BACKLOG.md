@@ -344,9 +344,11 @@ usuario:
 import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
 intentar destrabarlo desde acá).
 
-**Estado actual**: categorías C, D y F ✅ terminadas y verificadas (ver
-detalle abajo) — próxima iteración: categoría E (pulido del panel admin),
-ahora con 20 productos reales para que paginación/búsqueda tengan sentido.
+**Estado actual**: categorías C, D, E y F ✅ terminadas y verificadas (ver
+detalle abajo) — próxima iteración: categoría G (tests con Vitest +
+Playwright), el bloque de trabajo más grande y distinto en tipo que
+queda, seguido de A/B (hero + institucionales, decisiones de diseño) y
+H (housekeeping, al final).
 
 ### Checklist por categoría
 
@@ -454,15 +456,58 @@ ahora con 20 productos reales para que paginación/búsqueda tengan sentido.
   se pudo probar acá. Un usuario real tabulando no debería tener este
   problema.
 
-**E. Pulido del panel admin**
-- [ ] Dashboard: actividad reciente (últimos N productos creados/editados)
-  además de las 3 stat cards que ya hay — sin librería de gráficos, una
-  lista/tabla alcanza.
-- [ ] Paginación en `/admin/productos` (una vez crezca el seed, ver F).
-- [ ] Buscador/filtro por nombre en `/admin/productos` (categoría/estado
-  es nice-to-have, no obligatorio).
-- [ ] Loading states (`loading.tsx` o skeleton inline) en listados/detalle
-  de admin.
+**E. Pulido del panel admin** ✅ HECHO Y VERIFICADO
+- [x] Dashboard (`admin/(dashboard)/page.tsx`): sección "Actividad
+  reciente" debajo de las 3 stat cards — últimos 6 productos por
+  `updatedAt desc`, con link a editar, categoría, precio, y "creado"/
+  "editado" + fecha (comparando `createdAt`/`updatedAt`). Sin librería
+  de gráficos, una lista alcanza.
+- [x] Paginación en `/admin/productos`: `PAGE_SIZE = 10`, `skip`/`take` +
+  `count` en paralelo con `Promise.all`, controles "Anterior"/"Siguiente"
+  que preservan `?q=` en la URL. El límite se probó con los 20 productos
+  reales de la categoría F: página 1 = los 10 más nuevos, página 2 = los
+  10 restantes (verificado por contenido real, no solo por código).
+- [x] Buscador por nombre en `/admin/productos` (`?q=`, `contains`
+  case-insensitive, mismo patrón que el buscador del catálogo público).
+  Probado con `?q=medias` → filtra exactamente a los 3 productos de
+  medias, ni uno más ni uno menos.
+- [x] Loading states: ya cubierto en la categoría C
+  (`admin/(dashboard)/loading.tsx`), compartido por dashboard/productos/
+  categorías.
+- [x] **Bug real encontrado y arreglado** (no estaba en el checklist
+  original, pero cae directo en "pulido del panel admin"): el layout de
+  admin (`admin/(dashboard)/layout.tsx`) tenía un sidebar fijo `w-60` sin
+  ninguna alternativa en mobile — igual al bug de nav del Día 4 en el
+  storefront, pero nunca se había arreglado del lado admin. Confirmado
+  con `scrollWidth` (529px) vs `clientWidth` (375px) en
+  `/admin`, `/admin/productos` y `/admin/categorias` — las tres rotas
+  desbordaban. Se arregló con el mismo patrón que ya existe en
+  `mobile-nav.tsx` del storefront: `src/components/admin/admin-mobile-nav.tsx`
+  (nuevo, hamburguesa + Sheet con los mismos links + el logout que antes
+  solo vivía en el sidebar de escritorio) + una barra superior mobile-only
+  en el layout (`sm:hidden`), sidebar de escritorio ahora `hidden sm:flex`.
+  Verificado: `scrollWidth === clientWidth` (375) en las tres rutas
+  después del fix.
+
+**Nota de entorno** (mismo tipo de limitación ya documentada varias veces
+en Día 3/4 y en la categoría D de este pase): en `/admin/productos`
+específicamente, esta pestaña de pruebas se queda mostrando el skeleton
+de `loading.tsx` indefinidamente — ni con reload duro
+(`window.location.reload()`, `document.readyState === "complete"`) ni en
+una pestaña nueva se termina de componer el swap visual del boundary de
+Suspense, aunque el HTML que manda el servidor sí trae el contenido real
+completo (confirmado bajando la respuesta cruda con `fetch()` +
+`DOMParser`: la tabla, la paginación y el buscador están ahí, con los
+datos correctos). Se verificó la funcionalidad real igual, por ese
+camino: página 1 trae los 10 productos más nuevos, página 2 trae los 10
+restantes, `?q=medias` filtra a los 3 productos correctos, y el input de
+búsqueda refleja el término buscado. El botón "Anterior" en la página 1
+es un `<button disabled>` real (no un link con `disabled` puesto encima,
+que no bloquearía la navegación en un `<a>`). Es limitación del entorno
+de pruebas, no del código — otras páginas con el mismo `loading.tsx`
+(`/admin` sí resolvió bien en esta misma sesión) sugieren que es más una
+cuestión de timing/scheduler en esta pestaña específica que un problema
+sistemático.
 
 **F. Datos de demo (seed)** ✅ HECHO Y VERIFICADO
 - [x] Catálogo ampliado de 9 a **20 productos**, categoría nueva
