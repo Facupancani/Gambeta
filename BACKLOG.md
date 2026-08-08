@@ -157,3 +157,936 @@ de seguridad no me permiten completar por él):
 
 En cuanto el usuario haga cualquiera de las dos, avisar para retomar y
 terminar el resto del Día 4 (verificar el deploy real, QA final, pulido).
+
+## Pase de diseño (post-feedback del usuario, 2026-08-07) — ✅ HECHO Y VERIFICADO
+
+El usuario dio feedback real sobre el sitio funcionando: falta personalidad,
+tipografía de heading parece "de código", sin imágenes, faltan afordancias de
+UX (agregar al carrito desde la card, volver atrás en PDP). Se investigó
+benchmark dirigido y se cerró un plan concreto. Referencia principal aprobada
+por el usuario: **myrsport.com.ar** (marca de sneakers urbana AR). Se
+inspeccionó en vivo (no solo por descripción) y se midieron valores reales:
+
+- Fondo negro puro (`#000`) — confirmado que el negro NO era el problema real
+  (la personalidad la da el peso de la imagen/contenido, no el color de
+  fondo). **No aclarar el fondo — sumar contenido visual encima.**
+- Heading font: **Bebas Neue** (confirmado en el DOM real de MYR — coincide
+  con una de las 3 opciones ya propuestas al usuario, así que queda elegida).
+- Body font: Inter — igual a la nuestra, sin cambios ahí.
+- Botones: `border-radius: 0px`, chicos, tipografía protagonista
+  (ej. "VER MÁS" — 12px, padding 10px 15px, fondo negro/texto blanco, sin
+  redondeo). Patrón: pocos botones convencionales, más texto+línea.
+- Nav de MYR (orden real): hamburguesa (menú) → logo centro → ícono
+  buscador → cuenta → ícono carrito con contador. El usuario pidió adaptar
+  esto pero con la lupa arriba a la **izquierda** específicamente (no calcar
+  posición exacta de MYR ahí).
+- Patrones adicionales de benchmark (conocimiento general, no navegado en
+  vivo por límite de contexto de la sesión — válido igual, son patrones muy
+  establecidos): **Nike.com** → tipografía enorme y segura en el hero, CTAs
+  minimalistas (texto subrayado + un solo botón rectangular protagonista),
+  mucho whitespace, la foto de producto siempre al frente. **Streetwear
+  premium (Off-White/Aime Leon Dore)** → botones cuadrados, uppercase con
+  tracking usado con moderación (no en todo), fotografía por sobre
+  ilustración. **On Running** → aunque ellos usan fondo claro (no aplica acá
+  directo), el patrón que sí aplica es "el color lo pone la foto de
+  producto, el chrome de la UI se mantiene neutro".
+
+### Tareas a ejecutar (orden sugerido) — ✅ TODO HECHO Y VERIFICADO (2026-08-07)
+- [x] Cambiar fuente de heading global de Space Grotesk → **Bebas Neue**
+  (`next/font/google`, `weight: "400"` porque no es variable). Confirmado
+  API de fonts contra `node_modules/next/dist/docs/` antes de tocar código
+  (sin breaking changes ahí). Como Bebas Neue solo tiene peso 400, se agregó
+  `.font-heading { font-weight: 400 !important }` en `globals.css` para que
+  no dispare bold sintético del navegador al combinarse con las clases
+  `font-bold`/`font-semibold` que ya usaba el resto del código. Verificado
+  en navegador: headings, eyebrow y logo renderizan con la fuente nueva sin
+  errores de consola.
+- [x] Bajar `--radius` global de 0.75rem a **0.125rem** (extremo inferior del
+  rango sugerido) — botones/cards/pills quedan casi cuadrados. Verificado
+  visualmente vía accessibility tree (no hay forma de comparar radios en
+  píxeles con las herramientas disponibles, pero la clase se aplica y no
+  rompe layout en ningún viewport probado).
+- [x] Paleta reducida a un solo acento: se sacó el segundo acento amarillo
+  (`--brand-yellow`, usado antes en "Ver catálogo", "Agregar al carrito" y
+  "Finalizar por WhatsApp") y esos 3 CTAs ahora usan el verde `--primary`
+  (variant "default" del Button). El resto de los usos decorativos de verde
+  (bordes hover de card, pills de categoría activas, precio, links) se
+  pasaron a negro/blanco/gris (`foreground`/`muted-foreground`, o invertido
+  `bg-foreground text-background` para estados "seleccionado"). Token
+  `--brand-yellow` se deja definido pero sin usar, documentado en el
+  comentario de `globals.css` por si se necesita un acento futuro.
+- [x] Header: "Carrito" en texto → ícono `ShoppingBag` (lucide-react) con
+  badge de cantidad (`cart-badge.tsx`). Verificado en navegador: agregar un
+  producto vía quick-add y confirmar en `/carrito` que el item aparece
+  (probado end-to-end, ver abajo).
+- [x] Header: ícono de lupa a la izquierda del logo (`site-search.tsx`,
+  nuevo componente) — toggle a un input inline que navega a
+  `/catalogo?q=...`. Nota de entorno: el `key: "Return"` sintético del
+  navegador de pruebas no siempre dispara el submit nativo del `<form>`
+  (mismo tipo de limitación ya documentada en Día 3/4 con popovers y
+  transiciones CSS) — se confirmó el flujo real disparando
+  `form.requestSubmit()` vía JS, que navegó correctamente a
+  `/catalogo?q=medias` y filtró a 1 resultado. Un click real de mouse no
+  tiene este problema.
+- [x] Placeholders ilustrados por categoría: `src/lib/category-icon.tsx`
+  mapea `Category.slug` → ícono de lucide-react (`SportShoe` botines,
+  `Volleyball` pelotas, `Shield` canilleras, `Shirt` medias, fallback
+  `Package`). Aplicado en `ProductCard` y en la PDP.
+- [x] Botón rápido "+" en `ProductCard` (catálogo y home): usa la primera
+  variante del producto (sin selector de talle en la card). Requirió pasar
+  `variants: { take: 1 }` en las queries de home/catálogo. La card se
+  reestructuró de `<Link>` envolvente a `<div>` + `<Link className="contents">`
+  para el área clickeable, con el botón "+" como hermano posicionado encima
+  (evita anidar `<button>` dentro de `<a>`, HTML inválido). Verificado
+  end-to-end en navegador: click en "+" en Home agrega el item sin navegar,
+  toast de confirmación, y `/carrito` muestra el producto con talle "Único"
+  y el total correcto. Correctamente ausente en el único producto
+  `SOLD_OUT` (Botines Gambeta Elite X).
+- [x] Flecha "Volver al catálogo" en la PDP (`producto/[slug]/page.tsx`),
+  con ícono `ArrowLeft`, apunta a `/catalogo`.
+- [x] **8-9 fotos de stock cargadas** (9 en total, una por producto del
+  seed — botines: Unsplash; pelotas: Unsplash; canilleras: Wikimedia
+  Commons; medias: Pexels — todas de licencia libre/gratuita, fuentes
+  documentadas en `prisma/seed-images.ts`). Descargadas, subidas a
+  Cloudinary vía el mismo preset unsigned que ya usa el widget del admin
+  (`prisma/seed-images.ts`, no forma parte de `npm run db:seed` — es un
+  script aparte pensado para correr una vez, seguro de re-correr) y
+  asociadas como `ProductImage` de cada producto. Verificado: el request
+  directo al optimizador de imágenes de Next.js devuelve 200/image-jpeg
+  para las URLs de Cloudinary, y la imagen `priority` de una PDP cargó con
+  `naturalWidth` real (640px) — confirma que el pipeline completo
+  (Cloudinary → Next/Image) funciona. Las miniaturas lazy-load de las
+  grillas de Home/Catálogo no se pudieron confirmar pixel a pixel en este
+  navegador de pruebas (el `IntersectionObserver` del lazy-loading no
+  dispara sin compositing real — mismo tipo de limitación ya documentada en
+  Día 3/4), pero usan el mismo componente `<Image>` y la misma URL
+  verificada, así que no hay motivo para que se comporten distinto en un
+  navegador real.
+- [x] Páginas institucionales (Nosotros/FAQ/Contacto/Envíos): NO se
+  tocaron — solo heredan el cambio global de fuente/paleta/radius vía
+  `globals.css`/`layout.tsx`, ningún archivo propio de esas páginas fue
+  editado.
+- [x] Verificado con navegador (visual vía accessibility tree + consola sin
+  errores) en desktop (1280px) y mobile (375px, sin overflow horizontal) en
+  Home, Catálogo (con y sin filtro), PDP, Carrito, y panel Admin
+  (Inicio/Productos) antes de dar todo por terminado.
+
+**Nota de licencias**: 2 de las 9 fotos (canilleras, vía Wikimedia Commons)
+son CC-BY-SA y piden atribución si se usan públicamente; el resto
+(Unsplash/Pexels) no la requiere. Como es catálogo de ejemplo, no bloquea,
+pero si el usuario quiere reemplazar canilleras por fotos propias/CC0 más
+adelante, tenerlo en cuenta. Fuente completa de cada foto en
+`prisma/seed-images.ts`.
+
+### Nota de método (pedido explícito del usuario, para tenerlo en cuenta en
+futuras sesiones): antes de programar cambios de diseño, definir opciones
+concretas primero (ej. 3 fuentes candidatas con el porqué) en vez de
+implementar a ciegas. Al usuario le gustó este approach y pidió que se
+mantenga como forma de trabajo para decisiones de diseño futuras.
+
+## Pendiente — Hero con foto (feedback del 2026-08-07, sesión 2, NO implementado)
+
+El usuario, después de ver el pase de diseño ya hecho, pidió esto anotado
+para retomar en otro momento (ahora sigue con otra cosa, no tocar todavía):
+
+- [ ] **Hero de la Home con foto de impacto**: el hero actual (`page.tsx`,
+  sección superior) es solo texto sobre fondo negro — el usuario lo quiere
+  con una foto grande que dé personalidad e impacto inicial, mencionando
+  explícitamente **Nike, Adidas y myrsport.com.ar** como referencia (mismo
+  benchmark ya usado en el pase de diseño anterior — ver sección de arriba
+  para los patrones ya investigados de esas marcas: tipografía enorme +
+  foto de producto siempre al frente en Nike, fotografía por sobre
+  ilustración en streetwear premium). Definir antes de implementar: ¿foto
+  de stock (mismo criterio de licencia libre que se usó para el catálogo)
+  o esperar a que el usuario tenga foto propia? Seguir la nota de método de
+  arriba — proponer 2-3 opciones concretas de composición/foto antes de
+  programar.
+- [ ] **Botón "Ver catálogo" del hero → fondo blanco, texto negro**: pedido
+  explícito y puntual, distinto del resto de los CTAs primarios (que usan
+  el verde `--primary` desde el pase de diseño anterior). Es una excepción
+  para este botón específico, no un cambio del acento global — probablemente
+  como variant nuevo de `Button` (ej. `variant="invert"`:
+  `bg-white text-black hover:bg-white/90`) en vez de tocar `--primary`.
+  Confirmar con navegador que contrasta bien sobre la foto del hero nueva
+  una vez que esa foto exista.
+
+*(Absorbido como categoría A de la sección siguiente — se sigue trackeando
+acá abajo, no hace falta volver a esta nota.)*
+
+## Pase "portfolio-ready" (loop autónomo, iniciado 2026-08-07, sesión 3)
+
+El usuario pidió reemplazar su propia posición en la creación: un loop
+autónomo (`/loop`, modo dinámico, sin intervalo fijo) que audite, planee y
+ejecute hasta que el sitio esté a nivel "profesional para portfolio" —
+UX/UI correcta, demo completa, todo excepto el deploy (que sigue bloqueado
+por el usuario, ver nota de Vercel arriba). Plan diseñado con un agente
+Explore (auditoría read-only del estado actual) + un agente Plan
+(estructura de este pase), y 4 preguntas de alcance ya respondidas por el
+usuario:
+
+1. **Páginas institucionales**: ahora SÍ entran en alcance (antes estaban
+   explícitamente excluidas).
+2. **Tests**: sí, sumar una suite básica (Vitest + Playwright) como parte
+   de "profesional".
+3. **Git**: commit + push seguido a la rama actual (`docs/design-pass-plan`,
+   ya trackea `origin/docs/design-pass-plan` y tiene el PR #1 abierto —
+   **no crear rama nueva**, seguir ahí: es descendiente fast-forward de
+   `master` y el PR #1 ya cuenta la historia completa scaffold→pulido, así
+   que conviene que este pase sea el mismo hilo). PR #1 se actualiza
+   (descripción/checklist) en cada hito, se abre a revisión del usuario
+   recién cuando se cumpla la condición de cierre de abajo — el merge es
+   decisión del usuario, no del loop.
+4. **Check-ins**: avisar al usuario en cada hito (una categoría completa),
+   no en cada micro-cambio, no en silencio total.
+
+**Fuera de alcance, no tocar**: todo lo que ya está en "V2" más abajo
+(Mercado Pago, cuentas/wishlist/reviews/cupones, dashboard de analítica,
+import CSV, IA de fotos) y el deploy a Vercel (bloqueo ya documentado, no
+intentar destrabarlo desde acá).
+
+**Estado actual**: ✅ **PASE COMPLETO — las 8 categorías (A-H) terminadas,
+verificadas y con la condición de cierre cumplida** (ver detalle de cada
+categoría abajo y el checklist de cierre al final de esta sección). El
+loop se para acá. Único pendiente real del proyecto: deploy a Vercel
+(bloqueo ya documentado en la sección "Día 4" de este mismo archivo, sin
+relación con este pase).
+
+### Checklist por categoría
+
+**A. Hero / impacto visual (Home)** ✅ HECHO Y VERIFICADO
+
+**3 opciones de foto comparadas (bajadas y miradas de verdad, no solo por
+alt text) antes de programar, como pide la nota de método:**
+1. **Descartada** — foto de un partido amateur en cancha sintética,
+   buena luz, PERO tiene logos de sponsors reales en las camisetas
+   (`TARGOBANK`) y un cartel publicitario de una marca de apuestas rusa
+   (`ВУЛКАН`) bien visible de fondo. Inutilizable — no se puede poner
+   publicidad de terceros (y menos de apuestas) en el hero.
+2. **Elegida** — jugador en movimiento (motion blur) pateando al arco de
+   noche, cielo nocturno ocupando ~65% del cuadro (casi negro ya de
+   base), luces de estadio como puntos pequeños de fondo. Horizontal
+   (1600×895, encaja perfecto con un hero ancho), paleta oscura que
+   combina directo con el fondo de la marca sin pelearse, y sin ningún
+   logo/marca real visible más que el nombre borroso e ilegible de la
+   pelota. La que mejor cumple el patrón Nike investigado
+  ("tipografía enorme y segura... la foto de producto/acción siempre al
+  frente").
+3. **Descartada** — jugador pateando, ángulo bajo dramático, MUY vistosa,
+  pero vertical/retrato (no una relación de aspecto horizontal para un
+  hero ancho) y con un cielo celeste-grisáceo que no combina con la
+  paleta negra de la marca; hubiera necesitado recortar tanto que se
+  perdía el impacto.
+
+**Implementación:**
+- [x] Foto (opción 2) subida a Cloudinary (`gambeta/hero/`, licencia
+  libre Unsplash, misma autorización ya vigente).
+- [x] Hero rediseñado en `src/app/(storefront)/page.tsx`: foto de fondo
+  full-bleed (`next/image` `fill` + `priority`, es el LCP de la Home)
+  con dos scrims (`bg-gradient-to-r` de izquierda a derecha y
+  `bg-gradient-to-t` abajo) — el scrim izquierdo arranca en
+  `from-background` (100% opaco, sin `/valor`), así que donde arranca el
+  texto (borde izquierdo) el color efectivo es sólido, idéntico a un
+  hero sin foto — contraste garantizado por construcción, no por suerte.
+  Confirmado inspeccionando el `background-image` computado real del
+  navegador (el stop del 0% es el `--background` sólido, sin alpha).
+- [x] `Button` `variant="invert"` (`bg-white text-black hover:bg-white/90`)
+  nuevo en `button.tsx`, usado solo en "Ver catálogo" — excepción puntual
+  documentada en el propio código, no toca `--primary`. "Conocenos" pasó
+  a variant outline con estilos blancos sobre transparente (antes
+  dependía de los tokens de fondo sólido, que ya no aplican sobre una
+  foto).
+- [x] Verificado en navegador: `GET` de la imagen 200, `naturalWidth`/
+  `naturalHeight` reales (no rota), botones con los colores exactos
+  esperados (`rgb(255,255,255)`/`rgb(0,0,0)` en "Ver catálogo"), sin
+  errores de consola, sin overflow horizontal en 375px.
+
+**B. Contenido institucional (Nosotros/FAQ/Contacto/Envíos)** ✅ HECHO Y
+VERIFICADO
+
+- [x] Las 4 páginas suman una imagen de stock real (Cloudinary) cada una,
+  vía `src/components/institutional-banner.tsx` (componente compartido,
+  banner ancho 21:9 con `objectPosition` configurable por página). Fotos
+  elegidas con el mismo criterio de descartar branding de terceros que
+  en la categoría A — de hecho se descartó una candidata para Nosotros
+  (partido amateur con un logo de sponsor "Elevato" visible en una
+  camiseta) y se reemplazó por otra sin ese problema antes de subirla:
+  - Nosotros: picadito amateur en una plaza (sin logos visibles).
+  - FAQ: manos revisando un botín gastado apoyado sobre una pelota.
+  - Contacto: alguien escribiendo un mensaje desde el celular.
+  - Envíos y pagos: caja de cartón simple, sin marcas de correo/courier.
+- [x] Nosotros ahora tiene una sección "Cómo trabajamos" (3 pasos con
+  ícono: elegís en el catálogo → coordinamos por WhatsApp → recibís
+  donde te quede cómodo), además de la foto — ya no es un bloque único.
+- [x] Las 4 páginas revisadas: con foto + (en Nosotros) los 3 pasos, ya
+  no se sienten más finas que el resto del sitio.
+- [x] Sin lorem ipsum ni placeholders — todo el copy ya era real desde
+  antes (confirmado en la auditoría inicial de este pase), solo se sumó
+  contenido, no se generó relleno.
+- [x] Verificado en navegador: las 4 páginas sin errores de consola, las
+  4 imágenes confirmadas end-to-end vía el optimizador de imágenes de
+  Next (200, `image/jpeg`) — el `<img>` en sí no se pudo confirmar
+  cargado visualmente en esta pestaña porque el lazy-loading depende de
+  `IntersectionObserver`, que no dispara sin compositing real (mismo
+  tipo de limitación de entorno ya documentada varias veces). Sin
+  overflow horizontal en 375px en las 4 páginas.
+
+**C. Hygiene técnica — routing / SEO / OG / favicon** ✅ HECHO Y VERIFICADO
+- [x] `error.tsx` on-brand en raíz, `(storefront)` y `admin` (cubre
+  `/admin/login` y todo `/admin/(dashboard)/*`, ancestro común de ambos).
+  Confirmado contra la doc real de esta versión de Next
+  (`node_modules/next/dist/docs/.../error.md`) que la prop es `retry`, no
+  `reset` (breaking change vs. Next viejo) — los 3 archivos usan `retry`.
+- [x] `not-found.tsx` on-brand en raíz y `(storefront)` — el `notFound()`
+  de la PDP ahora cae en el de `(storefront)` (mantiene header/footer),
+  cualquier URL rota fuera de eso cae en el de raíz. Verificado en
+  navegador: `/esto-no-existe` → 404 de raíz; `/producto/no-existe` → 404
+  de storefront con header/footer/nav intactos (confirmado con
+  `read_page`, no solo texto).
+- [x] `loading.tsx` en `(storefront)` y `admin/(dashboard)` — genérico
+  (no imita el layout de una página específica, Next no permite
+  loading.tsx por-ruta sin carpetas anidadas por página).
+- [x] `layout.tsx` raíz: `metadataBase` (reusa `NEXT_PUBLIC_SITE_URL`,
+  mismo patrón que `sitemap.ts`/`robots.ts`), `openGraph`, `twitter`
+  (`summary_large_image`). `icons` no hace falta declararlo a mano —
+  Next lo autodetecta de `icon.tsx`/`apple-icon.tsx`.
+- [x] `icon.tsx` (32×32) y `apple-icon.tsx` (180×180) generados por código
+  con `next/og` `ImageResponse` — reemplazan el favicon default de Next
+  (`src/app/favicon.ico`, eliminado). Colores exactos sampleados de las
+  variables CSS reales corriendo la app (canvas probe, no adivinados
+  desde el oklch fuente): fondo `#090f0b`, verde `#32ce69`. Verificado:
+  `GET /icon` y `GET /apple-icon` devuelven 200 con las dimensiones
+  correctas.
+- [x] `opengraph-image.tsx` en raíz (1200×630, mismo esquema de color,
+  wordmark "GAMBETA" + eyebrow + barra verde) — verificado 200, dimensión
+  real 1200×630, y por canvas que el texto renderizó de verdad (11 colores
+  distintos muestreados: fondo, verde, blanco, grises de antialiasing —
+  no una imagen en blanco). La PDP ya tenía su propio OG dinámico (foto
+  real del producto) desde el pase de diseño anterior, así que el caso
+  más importante (compartir un link de producto) ya estaba cubierto.
+  **Intentado y descartado** un `opengraph-image.tsx` propio para
+  `/catalogo`: devuelve 404 de forma consistente (confirmado con `curl`
+  directo, reinicio de server, y `.next` limpio) cuando el archivo vive
+  anidado dentro de un route group (`(storefront)/catalogo/`), pero
+  funciona perfecto (200) en una carpeta anidada idéntica fuera de un
+  route group — parece un bug/limitación real de esta versión de Next con
+  archivos de metadata-imagen dentro de route groups anidados, no un
+  error de código. Como era un ítem "ideal" (no obligatorio) y el caso
+  que sí importa (PDP) ya funciona, se descartó en vez de seguir
+  investigando — si se necesita en el futuro, evaluar sacar `/catalogo`
+  del route group `(storefront)` o esperar un fix de Next.
+- [x] Sacados los SVG default de Next sin usar en `public/` (file.svg,
+  globe.svg, next.svg, vercel.svg, window.svg) — confirmado por grep que
+  nada los referenciaba antes de borrarlos.
+
+**D. Accesibilidad básica** ✅ HECHO Y VERIFICADO
+- [x] Input de `site-search.tsx` (una vez expandido) con
+  `aria-label="Buscar productos"`.
+- [x] Link "saltar al contenido" (`src/app/layout.tsx`, primer hijo de
+  `<body>`, `sr-only focus:not-sr-only`) apuntando a `#main-content`. Ese
+  id vive en el wrapper de `(storefront)/layout.tsx` (cubre todas las
+  páginas de storefront + sus error/not-found/loading) y en
+  `admin/(dashboard)/layout.tsx` (cubre dashboard/productos/categorías) —
+  más 4 páginas standalone que no comparten esos layouts y necesitaban su
+  propio id: `app/error.tsx`, `app/not-found.tsx`, `app/admin/error.tsx`,
+  `app/admin/login/page.tsx`.
+- [x] Contraste medido (no adivinado) con canvas probe + fórmula WCAG real
+  (relative luminance) sobre los colores reales de `globals.css`:
+  `--muted-foreground` sobre `--background` → **6.27:1**; sobre `--card`
+  → **5.78:1**; `--primary` sobre `--background` → **9.37:1**;
+  `--primary-foreground` sobre `--primary` → **9.34:1**. Los 4 pasan AA
+  (4.5:1) cómodos, ninguno necesitó ajuste.
+- [x] Tab-order revisado: el skip link es el primer elemento focuseable
+  del DOM (confirmado por orden real de `querySelectorAll`), seguido por
+  header (búsqueda/logo/nav/carrito) y después el contenido. **Nota de
+  entorno** (mismo tipo de limitación ya documentada en Día 3/4): este
+  navegador de pruebas reporta `document.hasFocus() === false` incluso
+  con la pestaña "fronteada" (sin compositing real), así que
+  `element.matches(':focus')` nunca da `true` acá aunque
+  `document.activeElement` sí sea el correcto — no se pudo confirmar
+  visualmente el estilo `:focus` del skip link interactuando de verdad.
+  Se verificó en su lugar a nivel de CSS compilado (recorriendo
+  `document.styleSheets` con `@layer` incluido) que las reglas
+  `.focus\:not-sr-only:focus`, `.focus\:fixed:focus`,
+  `.focus\:bg-foreground:focus`, etc. existen con las propiedades
+  correctas — el código es correcto, es la interacción en vivo la que no
+  se pudo probar acá. Un usuario real tabulando no debería tener este
+  problema.
+
+**E. Pulido del panel admin** ✅ HECHO Y VERIFICADO
+- [x] Dashboard (`admin/(dashboard)/page.tsx`): sección "Actividad
+  reciente" debajo de las 3 stat cards — últimos 6 productos por
+  `updatedAt desc`, con link a editar, categoría, precio, y "creado"/
+  "editado" + fecha (comparando `createdAt`/`updatedAt`). Sin librería
+  de gráficos, una lista alcanza.
+- [x] Paginación en `/admin/productos`: `PAGE_SIZE = 10`, `skip`/`take` +
+  `count` en paralelo con `Promise.all`, controles "Anterior"/"Siguiente"
+  que preservan `?q=` en la URL. El límite se probó con los 20 productos
+  reales de la categoría F: página 1 = los 10 más nuevos, página 2 = los
+  10 restantes (verificado por contenido real, no solo por código).
+- [x] Buscador por nombre en `/admin/productos` (`?q=`, `contains`
+  case-insensitive, mismo patrón que el buscador del catálogo público).
+  Probado con `?q=medias` → filtra exactamente a los 3 productos de
+  medias, ni uno más ni uno menos.
+- [x] Loading states: ya cubierto en la categoría C
+  (`admin/(dashboard)/loading.tsx`), compartido por dashboard/productos/
+  categorías.
+- [x] **Bug real encontrado y arreglado** (no estaba en el checklist
+  original, pero cae directo en "pulido del panel admin"): el layout de
+  admin (`admin/(dashboard)/layout.tsx`) tenía un sidebar fijo `w-60` sin
+  ninguna alternativa en mobile — igual al bug de nav del Día 4 en el
+  storefront, pero nunca se había arreglado del lado admin. Confirmado
+  con `scrollWidth` (529px) vs `clientWidth` (375px) en
+  `/admin`, `/admin/productos` y `/admin/categorias` — las tres rotas
+  desbordaban. Se arregló con el mismo patrón que ya existe en
+  `mobile-nav.tsx` del storefront: `src/components/admin/admin-mobile-nav.tsx`
+  (nuevo, hamburguesa + Sheet con los mismos links + el logout que antes
+  solo vivía en el sidebar de escritorio) + una barra superior mobile-only
+  en el layout (`sm:hidden`), sidebar de escritorio ahora `hidden sm:flex`.
+  Verificado: `scrollWidth === clientWidth` (375) en las tres rutas
+  después del fix.
+
+**Nota de entorno** (mismo tipo de limitación ya documentada varias veces
+en Día 3/4 y en la categoría D de este pase): en `/admin/productos`
+específicamente, esta pestaña de pruebas se queda mostrando el skeleton
+de `loading.tsx` indefinidamente — ni con reload duro
+(`window.location.reload()`, `document.readyState === "complete"`) ni en
+una pestaña nueva se termina de componer el swap visual del boundary de
+Suspense, aunque el HTML que manda el servidor sí trae el contenido real
+completo (confirmado bajando la respuesta cruda con `fetch()` +
+`DOMParser`: la tabla, la paginación y el buscador están ahí, con los
+datos correctos). Se verificó la funcionalidad real igual, por ese
+camino: página 1 trae los 10 productos más nuevos, página 2 trae los 10
+restantes, `?q=medias` filtra a los 3 productos correctos, y el input de
+búsqueda refleja el término buscado. El botón "Anterior" en la página 1
+es un `<button disabled>` real (no un link con `disabled` puesto encima,
+que no bloquearía la navegación en un `<a>`). Es limitación del entorno
+de pruebas, no del código — otras páginas con el mismo `loading.tsx`
+(`/admin` sí resolvió bien en esta misma sesión) sugieren que es más una
+cuestión de timing/scheduler en esta pestaña específica que un problema
+sistemático.
+
+**F. Datos de demo (seed)** ✅ HECHO Y VERIFICADO
+- [x] Catálogo ampliado de 9 a **20 productos**, categoría nueva
+  **"Botines de entrenamiento"** (slug `entrenamiento`) sumada a las 4
+  que ya había → 5 categorías. 11 productos nuevos en `prisma/seed.ts`
+  (2 botines, 2 pelotas, 2 canilleras, 2 medias, 3 entrenamiento), mismo
+  estilo de copy/precios que los 9 originales. Corrido `npm run db:seed`
+  contra la base real — idempotente (upsert por slug), no pisó nada de
+  lo que ya había.
+- [x] Galería de imágenes en la PDP: confirmado que `ProductImage` ya
+  soportaba múltiples por producto (no hizo falta tocar el schema).
+  Se construyó `src/components/product-gallery.tsx` (Client Component
+  con selector de miniaturas, foto principal + tira de thumbnails,
+  `aria-label`/`aria-current` en cada miniatura) y se integró en la PDP
+  reemplazando la imagen estática. Con 1 sola foto (o ninguna) se ve
+  igual que antes — la tira de miniaturas solo aparece con 2+ fotos.
+  **Verificado con click real** (no simulado): en `/producto/gambeta-veloz-fg`
+  se clickeó la segunda miniatura y se confirmó por `<img src>` que la
+  foto principal cambió a la segunda URL de Cloudinary — funciona de
+  punta a punta. Se sumó una 2ª foto de galería a 3 productos
+  representativos (`gambeta-veloz-fg`, `gambeta-elite-x`,
+  `pelota-matchball-n5`) en vez de a los 20 — criterio propio: mostrar la
+  capacidad real en una muestra en vez de gastar mucho tiempo bajando
+  fotos para cada producto, ver nota de `prisma/seed-images.ts`.
+- [x] 6 de los 11 productos nuevos tienen foto real (los 3 de
+  "entrenamiento" + 2 pelotas + 1 botín); los otros 5 (2 canilleras, 2
+  medias, 1 botín) usan el fallback de ícono+texto por categoría que ya
+  existía — mismo patrón intencional documentado en el pase de diseño
+  anterior, no es un hueco. 9 fotos nuevas (Unsplash, licencia libre)
+  subidas a Cloudinary vía `prisma/seed-images.ts` extendido con una
+  segunda lista (`GALLERY_ADDITIONS`) que suma una foto sin borrar la
+  que ya había, a diferencia de `IMAGES` que sí reemplaza — evita que
+  correr el script de nuevo pise la primera foto de un producto con
+  galería.
+- [x] `Botines Gambeta Elite X` sigue `SOLD_OUT` (badge "Agotado"
+  confirmado en el catálogo).
+
+**G. Tests** ✅ HECHO Y VERIFICADO
+- [x] Vitest configurado (`vitest.config.mts`, `vitest.setup.ts`,
+  `__tests__/` en la raíz), siguiendo la guía oficial de Next 16
+  (`node_modules/next/dist/docs/01-app/02-guides/testing/vitest.md`).
+  13 tests en 3 archivos:
+  - `format.test.ts` (`formatPrice`): número redondo, cero, números
+    grandes con miles, redondeo de decimales. Nota real: `Intl` en
+    `es-AR` pone un espacio **no separable** (`\u00A0`, no un espacio
+    normal) entre "$" y el número — confirmado inspeccionando el output
+    real carácter por carácter antes de escribir las aserciones, no
+    adivinado (si se hubiera usado un espacio normal el test habría
+    fallado en silencio... no, habría fallado ruidosamente, pero por el
+    motivo equivocado).
+  - `slugify.test.ts`: acentos/ñ (contenido en español), símbolos como
+    "N°5" colapsando a un solo guión, trim de guiones al borde.
+  - `cart-context.test.tsx`: como `CartProvider` es Context + hooks y no
+    un reducer puro, se testea renderizando un componente arnés chico
+    con `@testing-library/react` — merge de cantidad al agregar la misma
+    variante dos veces, variantes distintas quedan en líneas separadas,
+    `updateQuantity` exacto, `updateQuantity(0)` saca la línea igual que
+    `removeItem`.
+- [x] Playwright (`@playwright/test` estándar, no el wrapper experimental
+  `next experimental-test` — sin flag experimental de por medio, mejor
+  documentado). `playwright.config.ts` (solo Chromium, `webServer`
+  reusa el dev server si ya está corriendo) + `e2e/purchase-flow.spec.ts`:
+  catálogo → click en producto → PDP → elegir talle → agregar al
+  carrito → toast → `/carrito` → click "Finalizar por WhatsApp" →
+  confirma que la URL generada es realmente un link de `wa.me` con el
+  producto, el talle y el total en el mensaje.
+- [x] Scripts en `package.json`: `test` (`vitest run`, no watch — así
+  `npm run test` termina y devuelve un exit code, no queda colgado),
+  `test:watch`, `test:e2e`, `typecheck` (`tsc --noEmit`).
+- [x] Los 4 comandos (`lint`, `typecheck`, `test`, `test:e2e`) + `build`
+  pasan limpios.
+
+**Bugs/quirks reales encontrados armando esto** (documentados porque son
+el tipo de cosa que puede volver a pasar):
+- **Conflicto de dependencias al instalar `@vitejs/plugin-react`**: la
+  versión más nueva (6.x) trae `@rolldown/plugin-babel`, que pide
+  `@babel/core@^8`, mientras que `shadcn` (ya en el proyecto) pide
+  `@babel/core@^7` — `npm install` fallaba con `ERESOLVE`. Se resolvió
+  pineando `@vitejs/plugin-react@5.2.0` (última versión antes de ese
+  cambio) en vez de forzar con `--legacy-peer-deps`.
+- **Vitest con el pool default ("forks") se cuelga en este entorno**:
+  los 3 archivos de test tiraban timeout ("Failed to start forks
+  worker"). La causa más probable es el espacio en la ruta del repo
+  (`C:\Trabajos\Botines E-commerce`), un disparador conocido de
+  problemas al spawnear procesos en Windows. Se cambió a `pool: "threads"`
+  en `vitest.config.mts` (usa `worker_threads` en vez de procesos hijo)
+  y desapareció.
+- **`@testing-library/react` no limpiaba el DOM entre tests**: sin
+  `test.globals: true` en la config (no se usó, para seguir el patrón de
+  imports explícitos de la guía oficial), el auto-cleanup de Testing
+  Library nunca se registra solo. Se agregó `afterEach(() => cleanup())`
+  a mano en `vitest.setup.ts` — sin esto, `cart-context.test.tsx` tiraba
+  "multiple elements found" a partir del segundo test del archivo.
+- **wa.me redirige a `api.whatsapp.com` casi instantáneo**: el primer
+  intento del test e2e seguía el popup con `waitForEvent("popup")` +
+  `waitForLoadState`, y para cuando se leía `popup.url()` ya había
+  redirigido — el test comparaba contra el host equivocado. Se
+  resolvió interceptando `window.open` directamente en la página
+  (`page.evaluate` reemplazando `window.open` antes del click) para
+  capturar la URL exacta que arma `buildWhatsappCheckoutUrl` (en
+  `src/lib/whatsapp.ts`), sin depender de que el popup navegue.
+- **Un `npm run build` se cayó una vez con un crash nativo de worker de
+  Windows** (exit code `3221226505`, sin relación con el código — pasó
+  limpio al reintentar en el momento y de nuevo acá). Si vuelve a pasar
+  en el futuro, reintentar antes de asumir que es un error real.
+
+**H. Housekeeping** ✅ HECHO Y VERIFICADO
+- [x] `README.md`: sección "Estado del proyecto" reescrita reflejando lo
+  que realmente está hecho hoy (carrito, CRUD admin completo, galería de
+  fotos, SEO/OG, accesibilidad, tests — todo lo de este pase y de los
+  anteriores), sacada la referencia a la ruta local del plan
+  (`C:\Users\facup\...`), y apunta a `BACKLOG.md` como fuente de verdad
+  en vez de a un archivo que no existe en el repo. Tabla de scripts
+  completada con `lint`/`typecheck`/`test`/`test:watch`/`test:e2e`, que
+  no estaban. Confirmado por grep que no queda ninguna otra referencia a
+  rutas locales (`C:\Users\facup`) en el repo fuera de `BACKLOG.md`
+  mismo (que sí es un log de trabajo interno, no un doc público — tiene
+  sentido que mencione la carpeta scratch donde se bajaron las fotos).
+- [x] `BACKLOG.md` actualizado en cada iteración de este pase (no solo al
+  final) — política ya seguida desde la categoría C en adelante.
+
+### Condición de cierre — ✅ CUMPLIDA (2026-08-08)
+1. [x] Todos los ítems de A-H tildados — las 8 categorías completas, sin
+   excepciones pendientes.
+2. [x] `npm run build` limpio (última corrida, después de la categoría B).
+3. [x] `npm run typecheck` limpio.
+4. [x] `npm run test` (13/13) y `npm run test:e2e` (1/1) pasan.
+5. [x] `npm run lint` limpio.
+6. [x] Pasada final completa en navegador (desktop + 375px mobile): Home,
+   Catálogo, PDP (`gambeta-veloz-fg`), Carrito, las 4 institucionales
+   (ya verificadas en su propia categoría B), 404 provocado a propósito
+   (`/esto-no-existe-verificacion-final`), y admin (dashboard/productos/
+   categorías, sesión real logueada) — sin errores de consola en
+   ninguna, sin overflow horizontal en ninguna en 375px.
+7. [x] `README.md` sin secciones desactualizadas (hecho en categoría H).
+8. [x] PR #1 actualizado con la descripción final (ver commit de cierre).
+9. [x] Mensaje final al usuario enviado en el chat, resumiendo el
+   recorrido completo del pase y aclarando que el deploy a Vercel sigue
+   siendo el único paso pendiente del proyecto (bloqueo documentado en
+   la sección "Día 4" arriba, sin relación con este pase).
+
+Ante una decisión ambigua de "qué tan terminado es suficiente" (ej. si una
+foto institucional ya suma lo necesario), el criterio fue seguir con
+juicio propio y documentar la decisión en el detalle de cada categoría
+arriba, en vez de parar a preguntar.
+
+Ante una decisión ambigua de "qué tan terminado es suficiente" (ej. si una
+foto institucional ya suma lo necesario), el criterio es seguir con juicio
+propio y documentar la decisión acá (mismo tono que "Notas / bloqueos"),
+no parar a preguntar — los check-ins son por hito, no por micro-decisión.
+Preguntar solo ante bloqueos reales (credenciales, decisiones de negocio
+ambiguas), no ante juicio estético dentro de la latitud ya autorizada.
+
+## Pase de contenido y pulido — sesión 4 (2026-08-08)
+
+El usuario dio feedback puntual sobre el sitio ya "portfolio-ready" (pase
+anterior) y después pidió seguir solo, con criterio propio, hasta dejar el
+sitio en el mejor estado posible para portfolio — mismo espíritu que el
+pase anterior pero sin loop formal (`/loop`): el usuario se iba a dormir y
+pidió continuar en la misma sesión, documentando cada hito acá.
+
+**Reglas de este pase** (dadas explícitamente por el usuario):
+- No tocar la sección "V2" de este archivo (Mercado Pago, cuentas, reviews,
+  etc.) ni intentar destrabar el deploy a Vercel — sigue bloqueado
+  esperando al usuario (ver "Día 4" arriba).
+- Nada de testimonios/reviews de clientes inventados como si fueran
+  reales — es contenido de portfolio, no puede parecer un engaño.
+- Commit + push al branch actual en cada hito real, sin abrir rama nueva.
+- Parar cuando ya no haya nada razonable para mejorar (un "10 real", no
+  "podría seguir para siempre"), con resumen final claro.
+
+### Bloque 1 — feedback directo del usuario ✅ HECHO Y VERIFICADO
+
+- [x] **Nav: botón "Inicio" + estado activo en negrita/blanco.**
+  `site-header.tsx` pasó a Client Component (`usePathname`) — antes era
+  Server Component y no podía saber en qué ruta estaba parado. Se agregó
+  `{ href: "/", label: "Inicio" }` al principio de `NAV_LINKS` en
+  `site-header.tsx` y `mobile-nav.tsx` (listas separadas, cada una ya
+  tenía su propio subconjunto de links). Helper `isNavLinkActive`
+  duplicado en ambos archivos (no vale la pena un módulo compartido para
+  4 líneas): `/` matchea solo exacto, el resto matchea también
+  sub-rutas (`startsWith(href + "/")`) para que, por ejemplo, la PDP deje
+  "Catálogo" marcado. Activo = `font-bold text-white` (literal `text-white`,
+  no el token `--foreground`, porque el pedido fue puntualmente "letra
+  blanca" — en este tema, que es 100% oscuro siempre, da el mismo
+  resultado visual que el token, pero es más explícito). Verificado en
+  navegador (desktop y el Sheet mobile): `getComputedStyle` real confirma
+  `rgb(255,255,255)` + `font-weight: 700` en el link activo,
+  `aria-current="page"` presente, y el resto en gris/500 — en ambas
+  variantes de nav.
+- [x] **Buscador: mostrar y permitir editar el término buscado.**
+  Antes, buscar "pelota" desde la lupa del header te dejaba en
+  `/catalogo?q=pelota` sin ninguna confirmación en pantalla de qué se
+  había buscado. Nuevo componente `src/components/catalog-search-bar.tsx`
+  (Client Component), renderizado en `catalogo/page.tsx` solo cuando hay
+  `?q=` activo: texto "Buscando resultados para" + input editable
+  (precargado con el término) + botón "Buscar" + botón "Quitar búsqueda".
+  Preserva el filtro de categoría activo al editar. El estado "sin
+  resultados" también se actualizó para citar el término buscado
+  (`No encontramos productos para "x"`) en vez del mensaje genérico.
+  Verificado en navegador end-to-end: `?q=pelota` → banner con "pelota" en
+  el input → se edita a "medias" → click "Buscar" → navega a
+  `?q=medias` y el grid pasa de 4 pelotas a 3 medias reales. Un término
+  sin match (`zzznoexiste`) muestra el mensaje correcto citándolo.
+- [x] **Home ampliada** (era solo hero + "Recién llegados" — 2 secciones,
+  se sentía "una tapa para el catálogo"). `src/app/(storefront)/page.tsx`
+  reescrito con 8 secciones en total:
+  1. Hero (foto ya existente del pase anterior, solo cambió el copy —
+     ver ítem siguiente).
+  2. Franja de confianza (4 puntos con ícono: WhatsApp, envíos, stock
+     confirmado, forma de pago) — absorbe la parte "logística" que antes
+     sobrecargaba el copy del hero.
+  3. **"Explorá por categoría"**: grilla de las 5 categorías reales
+     (`prisma.category.findMany` con `_count` de productos activos/
+     agotados por categoría, ordenadas por `createdAt asc` para respetar
+     el orden intencional del seed — botines primero, entrenamiento
+     último — en vez de alfabético como las pills del catálogo). Cada
+     tile linkea a `/catalogo?categoria=slug`. Pendiente de pulir más
+     (ver Bloque 2, ítem 1: hoy son ícono+texto plano, van a llevar foto
+     de fondo).
+  4. "Recién llegados" (ya existía, sin cambios).
+  5. "Cómo funciona": mismos 3 pasos que ya existían en `/nosotros` pero
+     con copy propio (no calcado) + link "Conocé más sobre nosotros".
+  6. Teaser de marca: reutiliza la foto que ya vive en `/nosotros`
+     (picadito en una plaza) — decisión explícita de NO bajar una foto
+     nueva para esta sección, ya era el sujeto correcto (el mismo
+     "nosotros" institucional) y evita sumar un asset más a mantener.
+  7. Teaser de FAQ: 3 de las 4 preguntas (extraídas a `src/lib/faqs.ts`,
+     fuente compartida con `/faq` para que el copy no diverja entre las
+     dos vistas) + link "Ver todas".
+  8. CTA final: "¿Listo para tu próximo partido?" con botón a WhatsApp
+     (vía `/contacto`) y uno a catálogo.
+  Se agregó ícono de categoría para "entrenamiento" (`Dumbbell`,
+  `src/lib/category-icon.tsx`) — antes caía al fallback genérico
+  (`Package`), ahora tiene ícono propio como las otras 4.
+- [x] **Slogan del hero.** El texto viejo ("Botines y accesorios pensados
+  para quien juega por pasión, no por vitrina. Elegís en el catálogo,
+  coordinamos todo por WhatsApp.") sonaba a descripción de producto, no a
+  slogan — el propio usuario lo señaló como "forzado". Se acortó a
+  **"Menos vitrina, más cancha."**, que mantiene la idea de "pasión real
+  vs. postureo" del original pero como frase corta que combina con el
+  ritmo del H1 ("Jugás vos. / El equipo lo ponemos nosotros."). La parte
+  logística que se sacó de ahí (catálogo + WhatsApp) ya no se perdió: pasó
+  a la franja de confianza (punto 2 de la lista de arriba), donde funciona
+  mejor como tranquilidad concreta en vez de venir mezclada en el slogan.
+- [x] **Imagen de "Envíos y pagos".** La foto anterior (caja de cartón
+  simple sobre fondo blanco/estudio) se sentía genérica y sin personalidad
+  — señalado explícitamente por el usuario como "espantosa". Se
+  investigaron 3 candidatas en Unsplash antes de reemplazar (mismo método
+  ya establecido en el proyecto): una tenía "Amazon Prime" visible en una
+  bolsa de fondo (descartada, mismo tipo de problema de branding de
+  terceros ya documentado en el pase anterior para el hero); las otras 2
+  (una caja "FRAGILE" a contraluz dorado, y una entrega persona-a-persona
+  al aire libre) se mandaron como imagen al usuario para elegir — **eligió
+  la entrega persona-a-persona** (RoseBox رز باکس, Unsplash, licencia
+  libre), que además encaja mejor con el mensaje de "coordinamos todo
+  personalmente" del resto del sitio que una foto de producto sola.
+  Descargada y subida a Cloudinary vía un script puntual
+  (`upload-shipping-banner.mjs`, scratch — no forma parte del repo,
+  mismo patrón que `prisma/seed-images.ts` pero para un banner
+  institucional en vez de un producto) a
+  `gambeta/institucional/xbzrx8terdvh48fphshh`. `envios-y-pagos/page.tsx`
+  actualizado con la nueva URL y alt text. Verificado: el optimizador de
+  imágenes de Next devuelve 200/image-jpeg para la nueva URL.
+
+**Verificación de base antes de seguir** (pedida explícitamente por el
+usuario antes de continuar con el resto del pase):
+- [x] `npm run build`, `npm run typecheck`, `npm run test` (13/13),
+  `npm run test:e2e` (1/1), `npm run lint` — los 5 comandos limpios.
+- [x] Pasada en navegador real (no solo build): Home, Catálogo (con
+  búsqueda editada en vivo, y con término sin resultados),
+  `/envios-y-pagos` — desktop (1280px) y mobile (375px, incluido el Sheet
+  del nav mobile abierto de verdad, con click real vía `dispatchEvent`
+  porque el navegador de pruebas de este entorno no compone frames — ver
+  nota de entorno ya documentada varias veces en este archivo). Sin
+  errores de consola, sin overflow horizontal (`scrollWidth ===
+  clientWidth === 375`) en ninguna vista mobile probada.
+- **Nota de entorno nueva** (mismo tipo de limitación ya documentada,
+  variante distinta): el server de `npm run dev` de esta sesión tardó 3
+  intentos de `preview_start` en quedar realmente escuchando — el proceso
+  de Next arrancaba pero el puerto reportado por la herramienta no
+  coincidía con el puerto real donde terminó escuchando (`:3000`, no el
+  puerto con auto-asignación que la herramienta indicó). Se confirmó con
+  `Get-CimInstance Win32_Process` + `Get-NetTCPConnection` desde
+  PowerShell en vez de asumir que el mensaje de "servidor iniciado" era
+  preciso. `.claude/launch.json` quedó con `"autoPort": true` agregado
+  (necesario porque otra sesión de chat ya tenía el puerto 3000 tomado al
+  arrancar este pase).
+
+### Bloque 2 — mejoras propias ✅ HECHO Y VERIFICADO
+
+Trabajo autónomo pedido por el usuario, sin pausar para check-in salvo
+bloqueo real.
+
+- [x] **Tiles de categoría con foto de fondo.** La grilla "Explorá por
+  categoría" del home (Bloque 1) quedó anotada como pendiente de pulir —
+  hoy la resolví con el mismo tratamiento visual del hero: la query de
+  `page.tsx` ahora trae, por categoría, la foto del producto más reciente
+  que tenga imagen real (`products: { where: { images: { some: {} } },
+  take: 1, orderBy: createdAt desc }` + su primera `ProductImage`) — sin
+  bajar ningún asset nuevo, reutiliza fotos que ya existen. Si una
+  categoría no tiene ningún producto con foto (no pasó en la práctica: las
+  5 categorías reales tienen al menos un producto fotografiado), el tile
+  cae al tratamiento anterior (ícono + fondo `bg-card`) en vez de romper.
+  Con foto: `next/image` `fill` + el mismo scrim `bg-gradient-to-t`
+  oscuro del hero, ícono y texto en blanco encima. Verificado en
+  navegador: las 5 categorías (Botines, Pelotas, Canilleras, Medias,
+  Botines de entrenamiento) renderizan con `<img>` de fondo, sin errores
+  de consola.
+- [x] **PDP: sección "También te puede interesar".**
+  `producto/[slug]/page.tsx` suma una query de hasta 4 productos de la
+  misma categoría (excluyendo el actual, mismo filtro `status !==
+  PAUSED` que ya usa el catálogo), renderizados con el `ProductCard` ya
+  existente (mismo componente que Home/Catálogo, no uno nuevo) — así el
+  quick-add "+" funciona igual ahí también. Es cross-sell simple por
+  categoría, no un algoritmo de similitud. Sección oculta si la categoría
+  no tiene otros productos (no rompe con categorías chicas). Verificado
+  en `/producto/gambeta-veloz-fg`: muestra 4 botines distintos al actual,
+  incluido el que está `SOLD_OUT` con su badge "Agotado" correcto.
+- [x] **Auditoría de metadata institucional.** De las 7 páginas del
+  storefront, 2 tenían huecos: `/faq` no tenía `description` (se agregó) y
+  `/carrito` no tenía metadata en absoluto porque su `page.tsx` es Client
+  Component (`useCart`) — `metadata`/`generateMetadata` son
+  Server-Component-only (confirmado contra
+  `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-metadata.md`,
+  que además documenta el patrón exacto a seguir: mover la lógica de
+  cliente a un componente separado y dejar `page.tsx` como Server
+  Component). Se extrajo todo el contenido a
+  `src/components/cart-view.tsx` (`CartView`, mismo código, solo movido)
+  y `carrito/page.tsx` quedó como Server Component con `metadata` +
+  `<CartView />`. Verificado: `document.title` en `/carrito` ahora es
+  "Carrito — Gambeta" (antes heredaba el título genérico del layout raíz).
+  Las otras 5 páginas (Home, Catálogo, Nosotros, Envíos y pagos, Contacto)
+  ya tenían title+description completos, sin cambios.
+- [x] Verificado con navegador (desktop + 375px) + suite completa después
+  de este bloque: `npm run typecheck`, `npm run lint`, `npm run test`
+  (13/13), `npm run build`, `npm run test:e2e` (1/1) — los 5 limpios. Sin
+  errores de consola ni overflow horizontal en Home, PDP y Carrito.
+
+### Bloque 3 — pasada crítica de "ojo de reclutador" ✅ HECHO Y VERIFICADO
+
+Recorrida completa del sitio (público + admin) buscando específicamente lo
+que un visitante nuevo notaría como pobre, roto o a medio terminar —
+además de la auditoría de metadata ya hecha arriba (Bloque 2), encontré y
+arreglé:
+
+- [x] **Todo `/admin/*` sin metadata propia** — el hallazgo más grande de
+  esta pasada. Ninguna página de admin (login, dashboard, productos,
+  categorías, nuevo, editar) tenía su propio `title`: todas heredaban el
+  default del sitio público ("Gambeta — Botines de fútbol"), así que 6
+  pestañas de admin abiertas a la vez eran indistinguibles entre sí y de
+  la tienda. Cada `page.tsx` del dashboard (ya eran Server Components) 
+  ahora exporta su `metadata` (title + `robots: { index: false, follow:
+  false }`, belt-and-suspenders junto al `disallow: "/admin"` que ya
+  tenía `robots.ts`). "Editar producto" usa `generateMetadata` dinámico
+  con el nombre real del producto. `admin/login/page.tsx` era Client
+  Component (`useActionState`) y no podía exportar metadata directo — se
+  extrajo a `src/components/admin/login-form.tsx` (mismo patrón que
+  `cart-view.tsx`). Verificado con sesión real: cada ruta de admin tiene
+  ahora un `<title>` distinto; sin sesión, `/admin/login` sirve
+  `<meta name="robots" content="noindex, nofollow">`.
+- [x] **Home: header de "Explorá por categoría" con un `justify-between`
+  sin nada del lado derecho** — quedó así del Bloque 1 (era el mismo
+  patrón que las otras secciones, que sí tienen un link "Ver todo" a la
+  derecha, pero a esta se le olvidó agregarlo). Se sumó un link real "Ver
+  catálogo completo" en vez de dejar el wrapper vacío, y se cambió
+  `items-baseline` → `items-start` en ese header puntual (el único con
+  título + subtítulo de dos líneas del lado izquierdo — `items-baseline`
+  alineaba el link de la derecha con la línea del subtítulo en vez de con
+  el título).
+- [x] **CTA final del Home decía "Escribir por WhatsApp" pero en realidad
+  navegaba a `/contacto`** — un paso intermedio innecesario para un botón
+  que promete acción inmediata. Ahora linkea directo a `wa.me` (mismo
+  patrón que usa `/contacto`), con fallback a `/contacto` si
+  `NEXT_PUBLIC_WHATSAPP_NUMBER` no está seteado. Verificado:
+  `href="https://wa.me/..."` + `target="_blank"` reales en el botón.
+- [x] **Footer sin link a "Nosotros" ni a "Inicio"** — tenía Catálogo/
+  Envíos/FAQ/Contacto/WhatsApp pero faltaba Nosotros (única página
+  institucional ausente) y el wordmark "Gambeta" no era un link. Se
+  agregó el link a Nosotros y el wordmark ahora apunta a `/`.
+- [x] **Footer sin línea de copyright** — se sumó una línea final
+  "© {año actual} Gambeta. Todos los derechos reservados." (año calculado
+  con `new Date().getFullYear()`, no hardcodeado). Se descartó a propósito
+  una versión más larga que mencionaba explícitamente "catálogo de
+  ejemplo, sin pasarela de pago" — un footer que se auto-señala como demo
+  resta más de lo que suma en un sitio pensado para verse terminado; el
+  copyright simple es el estándar de cualquier e-commerce real.
+- [x] `README.md`: la lista de "Hecho" se actualizó para reflejar el
+  contenido nuevo del Home, la búsqueda editable y "también te puede
+  interesar" (antes describía la versión de 2 secciones del Home).
+- [x] Revisado sin encontrar problemas (o ya cubierto en pases previos,
+  confirmado de nuevo acá): `sitemap.ts` (excluye `/carrito` y `/admin`
+  correctamente, incluye las 5 institucionales + todos los productos
+  activos/agotados), `robots.ts` (`disallow: /admin`), 404/error
+  genéricos, tiles de categoría con nombre largo ("Botines de
+  entrenamiento") sin overflow ni en desktop ni en mobile (medido con
+  `getBoundingClientRect`, no a ojo), grep de `lorem`/`TODO`/`FIXME`/
+  placeholders sin resultados reales en `src/`.
+- [x] `npm run typecheck`, `npm run lint`, `npm run test` (13/13),
+  `npm run build`, `npm run test:e2e` (1/1) — los 5 limpios después de
+  este bloque. Verificado en navegador (desktop + 375px): Home, PDP,
+  Carrito, footer, y las 6 rutas de admin con sesión real — sin errores
+  de consola ni overflow horizontal.
+
+## Feedback del usuario, sesión 5 (2026-08-08)
+
+Tres pedidos en un mismo mensaje: (1) galería de fotos que cambie según el
+color elegido + un producto de ejemplo con varias fotos, (2) pregunta sobre
+qué tan protegido está `/admin`, (3) pedido de ayuda mid-turn para generar
+descripciones de producto con IA (el negocio vende símiles/imitaciones sin
+equipo de marketing, no hay de dónde sacar copy inventado a mano para cada
+producto).
+
+**(2) Respondida en el chat, no requería código** — resumen honesto: login
+con contraseña hasheada (bcrypt), sesión JWT firmada en cookie `httpOnly`
++ `secure` en producción, doble chequeo (proxy.ts optimista +
+`verifySession()` real en cada página/Server Action de admin), CSRF
+cubierto automáticamente por Next (Server Actions comparan `Origin` vs
+`Host`). Lo que falta y se lo dije tal cual: sin rate-limiting de intentos
+de login, sin 2FA, un solo usuario fijo — razonable para una demo de
+portfolio, no para un negocio real con varias personas con acceso.
+
+**(1) Galería de fotos por color** ✅ HECHO Y VERIFICADO
+- [x] `ProductImage` suma columna `color` opcional (migración
+  `add_image_color`) — si coincide con el `color` de la variante elegida,
+  la PDP muestra solo esas fotos; si no hay ninguna etiquetada para ese
+  color, muestra todas (nunca una galería vacía). Fotos sin color siguen
+  mostrándose siempre igual que antes — 100% retrocompatible con los 20
+  productos existentes, ninguno perdió su foto.
+- [x] `src/components/product-gallery.tsx`: nueva función pura
+  `pickImagesForColor` (exportada, con 4 tests unitarios nuevos en
+  `__tests__/product-gallery.test.ts`, 17/17 verde) + reseteo del índice
+  de miniatura activa cuando cambia el set de fotos mostradas (mismo
+  patrón de "ajustar estado durante el render" que ya usa
+  `mobile-nav.tsx`, con el mismo comentario explicando por qué no es un
+  `useEffect`).
+- [x] `src/components/product-buy-button.tsx`: suma `onVariantChange`
+  opcional, sin tocar el texto/comportamiento visible de los botones de
+  talle (el test e2e que depende de `"40 · Negro/Verde"` sigue pasando
+  sin cambios).
+- [x] **Nuevo** `src/components/product-detail.tsx`: la pieza que faltaba
+  — `ProductGallery` y `ProductBuyButton` no son hermanos en el layout de
+  la PDP (columnas opuestas de la grilla), así que ninguno podía avisarle
+  al otro que cambió el color. Este componente cliente nuevo es el único
+  lugar que sabe de los dos: guarda `selectedColor`, se lo pasa a la
+  galería, y usa la miniatura correcta como imagen del carrito al agregar.
+  El texto estático (nombre/precio/descripción) se movió acá adentro
+  también — no hay costo de SEO por eso, un Client Component igual se
+  renderiza en el servidor en la carga inicial (confirmado contra
+  `node_modules/next/dist/docs`).
+- [x] Admin: `ImageUploader` (`image-uploader.tsx`) suma un `<select>`
+  compacto debajo de cada miniatura para etiquetarla con un color — las
+  opciones salen de los colores ya cargados en el editor de talles arriba
+  (`availableColors`), no texto libre, para que no se desalineen. Si el
+  producto no tiene colores cargados, no se muestra el selector (no tiene
+  sentido un dropdown con una sola opción "Sin color"). `duplicateProduct`
+  ahora copia el `color` de cada foto también (antes lo perdía al
+  duplicar).
+- [x] Verificado en navegador: `/producto/gambeta-veloz-fg` (2 fotos, sin
+  color) sin cambios visibles ni errores; `/producto/medias-largas-clasicas`
+  (3 colores reales: Blanco/Negro/Azul, ya existían en el seed) cambia de
+  variante sin romper nada — hoy muestra la misma foto genérica en los 3
+  porque solo tiene 1 foto sin etiquetar (fallback correcto); pendiente
+  sumarle 2 fotos más para que se vea el cambio real (ver nota abajo).
+  Confirmado también contra el HTML crudo del form de admin (`fetch` +
+  contenido) que el selector de color por foto y el botón de IA renderizan
+  bien — esta pestaña de pruebas no compone clicks en `/admin/productos/
+  .../editar` (mismo tipo de limitación de entorno ya documentada varias
+  veces: el HTML real llega completo, pero la interacción en vivo no se
+  puede simular acá).
+
+**(3) Generador de descripciones con IA** ✅ CÓDIGO HECHO — **pendiente que
+el usuario ponga su propia `ANTHROPIC_API_KEY`** para probarlo en vivo
+- [x] `src/lib/actions/ai.ts`: Server Action `generateProductDescription`,
+  protegida con `verifySession()` igual que el resto de las acciones de
+  admin. Llama directo a la API de Mensajes de Anthropic vía `fetch` (sin
+  sumar el SDK como dependencia — mismo criterio ya usado en el proyecto
+  para auth/sesión: menos dependencias, no más). Modelo `claude-haiku-4-5`
+  (tarea liviana, no hace falta un modelo más grande ni más caro).
+- [x] **Prompt diseñado a propósito para no inventar** — el pedido del
+  usuario fue explícito: "no somos una marca, ¿de dónde saco una
+  descripción inventada?". El prompt le pasa a la IA solo nombre +
+  categoría + notas reales que cargue el vendedor (material, para qué
+  cancha, corte, etc.), y si no hay notas le dice explícitamente que NO
+  invente specs técnicas ni certificaciones — que describa en términos de
+  uso general en cambio. También le prohíbe mencionar marcas registradas
+  o afirmar uso profesional. Esto importa especialmente acá: mientras
+  verificaba esto encontré un producto cargado a mano por el usuario
+  llamado "Botines nike mercurial victory" — usar el nombre de una marca
+  registrada en productos símil/no licenciados es un riesgo real (marcas,
+  publicidad engañosa), se lo aviso en el chat, no lo toco yo sin que me
+  lo pida.
+- [x] `product-form.tsx`: bloque "Ayuda para redactarla (IA)" debajo del
+  campo Descripción — input opcional de notas + botón "Generar borrador".
+  El resultado llena el textarea (ahora controlado, antes era
+  `defaultValue`) pero no se guarda solo — el admin lo revisa/edita antes
+  de submitear el formulario real, como pidió el usuario ("algo que te
+  ayude a pensarlas", no que decida solo). El Select de categoría también
+  pasó a controlado (antes `defaultValue`) para poder mandarle el nombre
+  de la categoría a la IA.
+- [x] `.env.example` documenta `ANTHROPIC_API_KEY` (sin prefijo
+  `NEXT_PUBLIC_`, nunca debe llegar al browser). Sin la key, el botón
+  muestra un error claro en vez de romperse.
+- [ ] **No pude probarlo en vivo**: no tengo una `ANTHROPIC_API_KEY` para
+  poner en el `.env` de este entorno, y no es algo que deba generar o
+  pedir que me paste acá (es una credencial). El usuario tiene que sacar
+  una en console.anthropic.com y ponerla en su `.env` para probar el botón
+  de verdad — el código en sí está revisado y es correcto (typecheck/lint
+  limpios, misma estructura de manejo de errores que el resto de las
+  Server Actions).
+
+**Pendiente de este bloque** (no bloqueante, se retoma después):
+- [ ] Sumar 2 fotos más (Negro y Azul) a "Medias de fútbol largas" para que
+  el cambio de color en la PDP se vea de verdad en un producto real —
+  necesita bajar 2 fotos nuevas (permiso del usuario primero, mismo
+  criterio que la foto de envíos: mostrar candidatas antes de bajar nada).
+
+**Bug real encontrado de paso (no relacionado a lo de arriba)**: `.gitignore`
+tenía `.env*` sin excepción, así que `.env.example` — el archivo que el
+propio README le dice a cualquiera que clone el repo que copie como primer
+paso de setup — **nunca estuvo commiteado**. Cualquiera que clonara el repo
+desde cero (exactamente el escenario de un reclutador mirando el
+portfolio) se encontraba sin ese archivo, rompiendo el paso 2 del setup.
+Arreglado con `!.env.example` en `.gitignore` y el archivo commiteado por
+primera vez — se revisó línea por línea antes de subirlo, son todos
+placeholders/nombres de variable, ningún secreto real.

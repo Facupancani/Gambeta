@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 
 export function CartBadge() {
@@ -9,11 +10,12 @@ export function CartBadge() {
   return (
     <Link
       href="/carrito"
-      className="relative rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:border-primary/50"
+      aria-label="Ver carrito"
+      className="relative flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent"
     >
-      Carrito
+      <ShoppingBag className="size-5" />
       {totalItems > 0 && (
-        <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+        <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
           {totalItems}
         </span>
       )}

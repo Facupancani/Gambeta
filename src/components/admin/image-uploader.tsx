@@ -6,7 +6,7 @@ import Script from "next/script";
 import { ArrowLeft, ArrowRight, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export type ProductImageItem = { url: string; publicId?: string };
+export type ProductImageItem = { url: string; publicId?: string; color?: string };
 
 // Cloudinary's widget attaches itself to `window.cloudinary` once its script loads.
 declare global {
@@ -33,9 +33,14 @@ declare global {
 export function ImageUploader({
   images,
   onChange,
+  availableColors = [],
 }: {
   images: ProductImageItem[];
   onChange: (images: ProductImageItem[]) => void;
+  /** Distinct colors already entered in the variants/talles editor above —
+   * lets each photo be tagged against one of them instead of free text, so
+   * it can't drift out of sync with what the size selector actually offers. */
+  availableColors?: string[];
 }) {
   const [scriptReady, setScriptReady] = useState(false);
 
@@ -87,6 +92,14 @@ export function ImageUploader({
     onChange(next);
   };
 
+  const setColor = (index: number, color: string) => {
+    onChange(
+      images.map((image, i) =>
+        i === index ? { ...image, color: color || undefined } : image
+      )
+    );
+  };
+
   return (
     <div>
       <Script
@@ -97,52 +110,69 @@ export function ImageUploader({
 
       <div className="flex flex-wrap gap-3">
         {images.map((image, index) => (
-          <div
-            key={image.publicId ?? image.url}
-            className="group relative h-24 w-24 overflow-hidden rounded-lg border border-border bg-secondary"
-          >
-            <Image
-              src={image.url}
-              alt=""
-              fill
-              sizes="96px"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Mover antes"
-                disabled={index === 0}
-                onClick={() => move(index, -1)}
-              >
-                <ArrowLeft />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Quitar imagen"
-                onClick={() => removeAt(index)}
-              >
-                <X />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Mover después"
-                disabled={index === images.length - 1}
-                onClick={() => move(index, 1)}
-              >
-                <ArrowRight />
-              </Button>
+          <div key={image.publicId ?? image.url} className="flex flex-col gap-1">
+            <div className="group relative h-24 w-24 overflow-hidden rounded-lg border border-border bg-secondary">
+              <Image
+                src={image.url}
+                alt=""
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Mover antes"
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                >
+                  <ArrowLeft />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Quitar imagen"
+                  onClick={() => removeAt(index)}
+                >
+                  <X />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Mover después"
+                  disabled={index === images.length - 1}
+                  onClick={() => move(index, 1)}
+                >
+                  <ArrowRight />
+                </Button>
+              </div>
+              {index === 0 && (
+                <span className="absolute bottom-1 left-1 rounded bg-background/80 px-1.5 py-0.5 text-[10px] font-medium">
+                  Portada
+                </span>
+              )}
             </div>
-            {index === 0 && (
-              <span className="absolute bottom-1 left-1 rounded bg-background/80 px-1.5 py-0.5 text-[10px] font-medium">
-                Portada
-              </span>
+            {/* Only shown once the product actually has colors to tag
+                against — otherwise it'd just be a dropdown with one
+                meaningless "Sin color" option on every product. */}
+            {availableColors.length > 0 && (
+              <select
+                aria-label="Color de esta foto"
+                value={image.color ?? ""}
+                onChange={(e) => setColor(index, e.target.value)}
+                className="w-24 rounded-md border border-border bg-transparent px-1 py-1 text-[11px] text-foreground outline-none focus:border-foreground/50"
+              >
+                <option value="">Sin color</option>
+                {availableColors.map((color) => (
+                  <option key={color} value={color}>
+                    {color}
+                  </option>
+                ))}
+              </select>
             )}
           </div>
         ))}

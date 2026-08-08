@@ -2,6 +2,7 @@ import Link from "next/link";
 import { verifySession } from "@/lib/dal";
 import { logout } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
+import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 
 const NAV_LINKS = [
   { href: "/admin", label: "Inicio" },
@@ -19,8 +20,17 @@ export default async function AdminDashboardLayout({
   const session = await verifySession();
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground">
+    <div className="flex min-h-screen flex-col sm:flex-row">
+      {/* Mobile-only top bar — the sidebar below is `hidden` under `sm`,
+          same split as the storefront header/mobile-nav pattern. */}
+      <header className="flex items-center gap-1 border-b border-sidebar-border bg-sidebar p-2 text-sidebar-foreground sm:hidden">
+        <AdminMobileNav email={session.email} />
+        <Link href="/admin" className="font-heading text-lg font-bold">
+          Gambeta
+        </Link>
+      </header>
+
+      <aside className="hidden w-60 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground sm:flex">
         <div>
           <Link href="/admin" className="font-heading text-xl font-bold">
             Gambeta
@@ -53,7 +63,9 @@ export default async function AdminDashboardLayout({
           </form>
         </div>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <main id="main-content" className="min-w-0 flex-1 p-6">
+        {children}
+      </main>
     </div>
   );
 }

@@ -14,6 +14,7 @@ const VariantSchema = z.object({
 const ImageSchema = z.object({
   url: z.url(),
   publicId: z.string().optional(),
+  color: z.string().optional(),
 });
 
 const ProductSchema = z.object({
@@ -187,6 +188,7 @@ export async function duplicateProduct(productId: string) {
           url: img.url,
           publicId: img.publicId,
           order: img.order,
+          color: img.color,
         })),
       },
     },

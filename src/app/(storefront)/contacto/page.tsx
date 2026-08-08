@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
+import { InstitutionalBanner } from "@/components/institutional-banner";
 
 export const metadata: Metadata = {
   title: "Contacto",
   description: "Escribinos por WhatsApp para cualquier consulta.",
 };
+
+// Free-license stock photo (Unsplash) — someone texting on a phone, no
+// visible brand/app logos on screen.
+const BANNER_URL =
+  "https://res.cloudinary.com/l20lh4uz/image/upload/v1786153124/gambeta/institucional/bxoakhekdfwjje4qggsr.jpg";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
 
@@ -32,6 +38,11 @@ export default function ContactPage() {
           }
         />
       )}
+
+      <InstitutionalBanner
+        src={BANNER_URL}
+        alt="Escribiendo un mensaje desde el celular"
+      />
     </main>
   );
 }

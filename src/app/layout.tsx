@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter, Geist_Mono } from "next/font/google";
+import { Bebas_Neue, Inter, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-// Brand typography: Space Grotesk for headings (bold, geometric, has character),
-// Inter for body text (neutral, highly legible). Both free via next/font/google.
-const spaceGrotesk = Space_Grotesk({
+// Brand typography: Bebas Neue for headings (tall, condensed, poster-like —
+// matches the streetwear/sportswear benchmark, e.g. myrsport.com.ar), Inter
+// for body text (neutral, highly legible). Both free via next/font/google.
+// Bebas Neue isn't a variable font, so it needs an explicit weight.
+const bebasNeue = Bebas_Neue({
   variable: "--font-heading",
   subsets: ["latin"],
+  weight: "400",
 });
 
 const inter = Inter({
@@ -20,22 +23,57 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_TITLE = "Gambeta — Botines de fútbol";
+const SITE_DESCRIPTION =
+  "Botines, pelotas, canilleras y medias para jugadores amateurs apasionados por el fútbol. Coordinamos por WhatsApp.";
+
 export const metadata: Metadata = {
+  // Needed to resolve relative URLs (like the auto-detected icon.tsx/
+  // opengraph-image.tsx below) into absolute ones for og:image etc. Same
+  // env var already used by sitemap.ts/robots.ts.
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Gambeta — Botines de fútbol",
+    default: SITE_TITLE,
     template: "%s — Gambeta",
   },
-  description:
-    "Botines, pelotas, canilleras y medias para jugadores amateurs apasionados por el fútbol. Coordinamos por WhatsApp.",
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Gambeta",
+    locale: "es_AR",
+    type: "website",
+    // No `images` here on purpose — Next auto-detects opengraph-image.tsx
+    // (root) and each route's own (e.g. producto/[slug]) and merges them in.
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  // icon/apple-icon links are auto-injected from icon.tsx/apple-icon.tsx —
+  // no manual `icons` field needed.
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${bebasNeue.variable} ${inter.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Skip link: invisible until focused (first Tab press), lets
+            keyboard/screen-reader users jump past the header nav straight
+            to the page content (id="main-content", set on the storefront/
+            admin content wrappers and on each standalone fallback page). */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-foreground focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-background"
+        >
+          Saltar al contenido
+        </a>
         {children}
         <Toaster />
       </body>

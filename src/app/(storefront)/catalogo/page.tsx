@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/product-card";
+import { CatalogSearchBar } from "@/components/catalog-search-bar";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default async function CatalogPage({
       include: {
         category: true,
         images: { orderBy: { order: "asc" }, take: 1 },
+        variants: { orderBy: { createdAt: "asc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -38,12 +40,16 @@ export default async function CatalogPage({
     <main className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-heading text-3xl font-bold">Catálogo</h1>
 
+      {q && <CatalogSearchBar query={q} categoria={categoria} />}
+
       <div className="mt-6 flex flex-wrap gap-2">
         <Link
           href="/catalogo"
           className={cn(
-            "rounded-full border border-border px-4 py-1.5 text-sm",
-            !categoria && "border-primary bg-primary/10 text-primary"
+            "rounded-full border border-border px-4 py-1.5 text-sm transition-colors",
+            !categoria
+              ? "border-foreground bg-foreground text-background"
+              : "hover:border-foreground/50"
           )}
         >
           Todos
@@ -53,9 +59,10 @@ export default async function CatalogPage({
             key={category.id}
             href={`/catalogo?categoria=${category.slug}`}
             className={cn(
-              "rounded-full border border-border px-4 py-1.5 text-sm",
-              categoria === category.slug &&
-                "border-primary bg-primary/10 text-primary"
+              "rounded-full border border-border px-4 py-1.5 text-sm transition-colors",
+              categoria === category.slug
+                ? "border-foreground bg-foreground text-background"
+                : "hover:border-foreground/50"
             )}
           >
             {category.name}
@@ -65,7 +72,9 @@ export default async function CatalogPage({
 
       {products.length === 0 ? (
         <p className="mt-12 text-muted-foreground">
-          No encontramos productos con ese filtro.
+          {q
+            ? `No encontramos productos para "${q}".`
+            : "No encontramos productos con ese filtro."}
         </p>
       ) : (
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -78,7 +87,10 @@ export default async function CatalogPage({
                 price: product.price,
                 status: product.status,
                 categoryName: product.category.name,
+                categorySlug: product.category.slug,
                 imageUrl: product.images[0]?.url,
+                quickAddVariantId: product.variants[0]?.id,
+                quickAddVariantSize: product.variants[0]?.size,
               }}
             />
           ))}

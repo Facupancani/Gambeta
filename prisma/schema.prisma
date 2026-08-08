@@ -63,6 +63,11 @@ model ProductImage {
   url       String // URL final servida por Cloudinary
   publicId  String? // public_id de Cloudinary, necesario para poder borrarla después
   order     Int     @default(0)
+  // Opcional: si coincide con el `color` de una ProductVariant, la galería
+  // de la PDP muestra solo las fotos de ese color al elegirlo. Fotos sin
+  // color (null) se consideran "genéricas" y se muestran siempre que no
+  // haya ninguna foto etiquetada para el color elegido.
+  color     String?
 
   @@index([productId])
 }

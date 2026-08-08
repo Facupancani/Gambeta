@@ -13,6 +13,7 @@ const CATEGORIES = [
   { name: "Pelotas", slug: "pelotas" },
   { name: "Canilleras", slug: "canilleras" },
   { name: "Medias", slug: "medias" },
+  { name: "Botines de entrenamiento", slug: "entrenamiento" },
 ] as const;
 
 const PRODUCTS: Array<{
@@ -134,6 +135,143 @@ const PRODUCTS: Array<{
       { size: "Único", color: "Blanco" },
       { size: "Único", color: "Negro" },
       { size: "Único", color: "Azul" },
+    ],
+  },
+  // --- Ampliación del catálogo (pase "portfolio-ready", categoría F) ---
+  {
+    slug: "gambeta-fusion-fg",
+    name: "Botines Gambeta Fusion FG",
+    description:
+      "Botín todo terreno para césped natural firme, con un balance entre velocidad y contención pensado para jugadores que rotan de posición durante el partido.",
+    price: 56000,
+    category: "botines",
+    variants: [
+      { size: "38", color: "Azul/Blanco" },
+      { size: "39", color: "Azul/Blanco" },
+      { size: "40", color: "Azul/Blanco" },
+      { size: "41", color: "Azul/Blanco" },
+      { size: "42", color: "Azul/Blanco" },
+      { size: "43", color: "Azul/Blanco" },
+      { size: "44", color: "Azul/Blanco" },
+    ],
+  },
+  {
+    slug: "gambeta-grip-sg",
+    name: "Botines Gambeta Grip SG",
+    description:
+      "Tapones de rosca intercambiables pensados para cancha de césped natural blando o con barro, mejor tracción en superficies resbaladizas.",
+    price: 60000,
+    category: "botines",
+    variants: [
+      { size: "39", color: "Negro/Blanco" },
+      { size: "40", color: "Negro/Blanco" },
+      { size: "41", color: "Negro/Blanco" },
+      { size: "42", color: "Negro/Blanco" },
+      { size: "43", color: "Negro/Blanco" },
+    ],
+  },
+  {
+    slug: "pelota-training-n5",
+    name: "Pelota de fútbol N°5 Training",
+    description:
+      "Pelota N°5 para entrenamiento diario, con cubierta resistente a la abrasión pensada para aguantar sesiones largas sin perder la forma.",
+    price: 18000,
+    category: "pelotas",
+    variants: [{ size: "N°5" }],
+  },
+  {
+    slug: "pelota-infantil-n3",
+    name: "Pelota de fútbol infantil N°3",
+    description:
+      "Pelota N°3 para los más chicos, más liviana para facilitar el control y el golpeo en las primeras clases de fútbol.",
+    price: 15000,
+    category: "pelotas",
+    variants: [{ size: "N°3" }],
+  },
+  {
+    slug: "canilleras-ultra-light",
+    name: "Canilleras Ultra Light",
+    description:
+      "Protección mínima y liviana para quienes priorizan la libertad de movimiento por sobre la cobertura total.",
+    price: 13000,
+    category: "canilleras",
+    variants: [{ size: "S" }, { size: "M" }, { size: "L" }],
+  },
+  {
+    slug: "canilleras-juveniles",
+    name: "Canilleras Juveniles",
+    description:
+      "Talle pensado para jugadores juveniles, protección rígida con sujeción elástica simple.",
+    price: 10000,
+    category: "canilleras",
+    variants: [{ size: "Único" }],
+  },
+  {
+    slug: "medias-cortas",
+    name: "Medias de fútbol cortas",
+    description:
+      "Medias tobilleras para quienes prefieren no usar canillera larga, con elástico firme en el tobillo.",
+    price: 6000,
+    category: "medias",
+    variants: [
+      { size: "Único", color: "Blanco" },
+      { size: "Único", color: "Negro" },
+    ],
+  },
+  {
+    slug: "medias-termicas-entrenamiento",
+    name: "Medias térmicas de entrenamiento",
+    description:
+      "Medias con refuerzo térmico para entrenar en invierno, indicadas para sesiones al aire libre con frío.",
+    price: 9000,
+    category: "medias",
+    variants: [{ size: "Único", color: "Gris" }],
+  },
+  {
+    slug: "gambeta-trainer-ag-plus",
+    name: "Botines Gambeta Trainer AG+",
+    description:
+      "Multitaco pensado para uso diario en distintas superficies (césped sintético, natural firme) — ideal si entrenás varias veces por semana con una sola zapatilla.",
+    price: 42000,
+    category: "entrenamiento",
+    variants: [
+      { size: "39", color: "Gris/Negro" },
+      { size: "40", color: "Gris/Negro" },
+      { size: "41", color: "Gris/Negro" },
+      { size: "42", color: "Gris/Negro" },
+      { size: "43", color: "Gris/Negro" },
+      { size: "44", color: "Gris/Negro" },
+    ],
+  },
+  {
+    slug: "gambeta-trainer-turf",
+    name: "Botines Gambeta Trainer Turf",
+    description:
+      "Suela de goma plana pensada para superficies duras o césped sintético muy corto, con mejor amortiguación para sesiones largas de entrenamiento.",
+    price: 38000,
+    category: "entrenamiento",
+    variants: [
+      { size: "38", color: "Negro/Celeste" },
+      { size: "39", color: "Negro/Celeste" },
+      { size: "40", color: "Negro/Celeste" },
+      { size: "41", color: "Negro/Celeste" },
+      { size: "42", color: "Negro/Celeste" },
+      { size: "43", color: "Negro/Celeste" },
+    ],
+  },
+  {
+    slug: "gambeta-trainer-kids",
+    name: "Botines Gambeta Trainer Kids",
+    description:
+      "Versión en talles chicos de nuestra línea de entrenamiento, para que los más jóvenes empiecen con un calzado pensado para uso frecuente.",
+    price: 32000,
+    category: "entrenamiento",
+    variants: [
+      { size: "33", color: "Azul/Blanco" },
+      { size: "34", color: "Azul/Blanco" },
+      { size: "35", color: "Azul/Blanco" },
+      { size: "36", color: "Azul/Blanco" },
+      { size: "37", color: "Azul/Blanco" },
     ],
   },
 ];

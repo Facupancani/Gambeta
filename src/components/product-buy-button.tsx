@@ -16,6 +16,7 @@ export function ProductBuyButton({
   imageUrl,
   variants,
   soldOut,
+  onVariantChange,
 }: {
   productSlug: string;
   productName: string;
@@ -23,9 +24,18 @@ export function ProductBuyButton({
   imageUrl?: string | null;
   variants: Variant[];
   soldOut: boolean;
+  /** Fired whenever the selected size/color changes — lets a parent (e.g.
+   * the product gallery) react to the color without this component
+   * needing to know anything about galleries or photos itself. */
+  onVariantChange?: (variant: Variant) => void;
 }) {
   const [selected, setSelected] = useState<Variant | undefined>(variants[0]);
   const { addItem } = useCart();
+
+  const selectVariant = (variant: Variant) => {
+    setSelected(variant);
+    onVariantChange?.(variant);
+  };
 
   const handleAddToCart = () => {
     if (!selected) return;
@@ -75,12 +85,12 @@ export function ProductBuyButton({
               <button
                 key={variant.id}
                 type="button"
-                onClick={() => setSelected(variant)}
+                onClick={() => selectVariant(variant)}
                 className={cn(
                   "rounded-md border border-border px-3 py-1.5 text-sm transition-colors",
                   selected?.id === variant.id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "hover:border-primary/50"
+                    ? "border-foreground bg-foreground text-background"
+                    : "hover:border-foreground/50"
                 )}
               >
                 {variant.size}
@@ -95,7 +105,7 @@ export function ProductBuyButton({
           size="lg"
           onClick={handleAddToCart}
           disabled={!selected}
-          className="bg-brand-yellow text-brand-yellow-foreground hover:bg-brand-yellow/90 sm:w-auto"
+          className="sm:w-auto"
         >
           Agregar al carrito
         </Button>
